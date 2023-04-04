@@ -8,14 +8,12 @@ Task: given list of players will return list of game rounds. Each game round
 has list of two players pairs.
 
 Implementation of:
-
-    - ˇcircle_tables()ˇ -> circle system
-    - ˇberger_tables()ˇ -> berger tables
+ * ˇcircle_tables()ˇ -> circle system
+ * ˇberger_tables()ˇ -> berger tables
 
 Functions have:
-
-    * Input: list of players names
-    * Output: list of rounds containing list of player pairs
+ * Input: list of players names
+ * Output: list of rounds containing list of player pairs
 
 Unit testing based on examples in [https://handbook.fide.com/chapter/C05Annex1](https://handbook.fide.com/chapter/C05Annex1).
 
