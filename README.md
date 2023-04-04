@@ -8,8 +8,8 @@ Task: given list of players will return list of game rounds. Each game round
 has list of two players pairs.
 
 Implementation of:
- * ˇcircle_tables()ˇ -> circle system
- * ˇberger_tables()ˇ -> berger tables
+ * `circle_tables()` -> circle system
+ * `berger_tables()` -> berger tables
 
 Functions have:
  * Input: list of players names
@@ -20,6 +20,8 @@ Unit testing based on examples in [https://handbook.fide.com/chapter/C05Annex1](
 Example:
 
 Berger tables:
+
+    from round_robin_pairs import berger_tables, circle_tables, round_robin_rounds_to_str_list 
 
     players = ["1", "2", "3", "4"]
 
