@@ -19,4 +19,32 @@ Functions have:
 
 Unit testing based on examples in [https://handbook.fide.com/chapter/C05Annex1](https://handbook.fide.com/chapter/C05Annex1).
 
+Example:
 
+Berger tables:
+
+    players = ["1", "2", "3", "4"]
+
+    rounds = berger_tables(players)
+    print(rounds)
+        [[['1', '4'], ['2', '3']],
+         [('4', '3'), ['1', '2']],
+         [['2', '4'], ['3', '1']]]
+    print("\n".join(round_robin_rounds_to_str_list(rounds)))
+        Round 1: 1-4 2-3
+        Round 2: 4-3 1-2
+        Round 3: 2-4 3-1
+    
+Circle algorithm:
+
+    rounds = circle_tables(players)
+    print(rounds)
+        [[('1', '4'), ('2', '3')],
+         [('1', '3'), ('4', '2')],
+         [('1', '2'), ('3', '4')]]
+    print("\n".join(round_robin_rounds_to_str_list(rounds)))
+        Round 1: 1-4 2-3
+        Round 2: 1-3 4-2
+        Round 3: 1-2 3-4
+
+**NOTE:** not yet on PyPI, sorry!
