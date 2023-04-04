@@ -9,6 +9,7 @@ run like:
 """
 import unittest
 from itertools import combinations
+from pprint import pprint
 import os, sys
 
 root_path = os.path.join(os.path.dirname(__file__), "..")
@@ -25,12 +26,40 @@ class TestRoundRobin(unittest.TestCase):
         function = berger_tables if berger else circle_tables
         round_robin_rounds = function(players, verbose=verbose)
 
-        round_robin_rounds
         expected = set([tuple(sorted(pair)) for pair in combinations(players, 2)])
         got = [tuple(sorted(pair)) for row in round_robin_rounds for pair in row]
         #print(expected); print(got)
         self.assertEqual(len(expected), len(got), "found some duplicates or missing")
         self.assertEqual(expected, set(got), "some pair combinations not found" )
+
+        # TODO: 
+        if False:
+            # check how just system is:
+            #   - nearly equal times of schedule order 
+            #   - nearly equal times of first in a pair
+            nr_schedules = nr_of_players // 2
+            schedule_dict = {pl : {sch_nr: 0 for sch_nr in range(1, nr_schedules+1)} for pl in players}
+
+            first_dict = {pl : 0 for pl in players}
+            nearly_equal = ((nr_of_players-1) // 2, (nr_of_players-1) // 2 +1)
+
+            for round_pairs in round_robin_rounds:
+                for sch_nr, (pl1, pl2) in enumerate(round_pairs, 1):
+                    schedule_dict[pl1][sch_nr] += 1
+                    schedule_dict[pl2][sch_nr] += 1
+                    first_dict[pl1] +=1
+
+            pprint(schedule_dict)
+            pprint(first_dict)
+
+            for pl, first_cnt in first_dict.items():
+                if first_cnt not in nearly_equal:
+                    print(f"First unjust: pl={pl} -> first count={first_cnt}")
+
+            for pl, sch_cnt_dict in schedule_dict.items():
+                for sch_nr, sch_cnt in sch_cnt_dict.items():
+                    if sch_cnt not in nearly_equal:
+                        print(f"Schedule unjust: pl={pl} -> sch={sch_nr}: count={sch_cnt}")
 
 
         rounds_str_list = round_robin_rounds_to_str_list(round_robin_rounds)
