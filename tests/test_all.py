@@ -41,7 +41,6 @@ class TestRoundRobin(unittest.TestCase):
             schedule_dict = {pl : {sch_nr: 0 for sch_nr in range(1, nr_schedules+1)} for pl in players}
 
             first_dict = {pl : 0 for pl in players}
-            nearly_equal = ((nr_of_players-1) // 2, (nr_of_players-1) // 2 +1)
 
             for round_pairs in round_robin_rounds:
                 for sch_nr, (pl1, pl2) in enumerate(round_pairs, 1):
@@ -52,13 +51,15 @@ class TestRoundRobin(unittest.TestCase):
             pprint(schedule_dict)
             pprint(first_dict)
 
+            first_nearly_equal = ((nr_of_players-1) // 2, (nr_of_players-1) // 2 +1)
             for pl, first_cnt in first_dict.items():
-                if first_cnt not in nearly_equal:
+                if first_cnt not in first_nearly_equal:
                     print(f"First unjust: pl={pl} -> first count={first_cnt}")
 
+            sch_nearly_equal = (1, 2)
             for pl, sch_cnt_dict in schedule_dict.items():
                 for sch_nr, sch_cnt in sch_cnt_dict.items():
-                    if sch_cnt not in nearly_equal:
+                    if sch_cnt not in sch_nearly_equal:
                         print(f"Schedule unjust: pl={pl} -> sch={sch_nr}: count={sch_cnt}")
 
 

@@ -47,4 +47,11 @@ Circle algorithm:
         Round 2: 1-3 4-2
         Round 3: 1-2 3-4
 
-**NOTE:** not yet on PyPI, sorry!
+## NOTE: not yet on PyPI, sorry!
+will be done ...
+
+## TODO: implement improvement of the algorithm(s) to be more just:
+work in progress in unit tests, check how just system is:
+ * nearly equal times of schedule order 
+ * nearly equal times of first in a pair
+
