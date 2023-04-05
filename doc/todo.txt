@@ -1,0 +1,78 @@
+RL 230405 
+    **onaj fiksni bi se mogao samo ugurati redom - prvo kolo - igra prvi
+    drugo igra drug ... samo move s prvog mjesta na ovo prema kolu**
+
+    metode:
+        goal function:
+            svi bi idealno trebali imati 1xsvaki termin 
+                a) ako ima 1 za termin -> 0
+                b) ako ima 2 za termin -> +1
+                c) ako ima 0 za termin -> +1
+                d) ako ima 3+ za termin -> +1 * (N-1), npr. 3 ima (3-1) = +2
+            funkcija cilja:
+                za svakog igrača izračunaj suma gornje funkcije tog igrača za sve termine
+                    e) broj članova iz sume za jednog igrača (T) je dodatan faktor 
+                       T * +1 
+                    konkretno:
+                        igrač -1 u 15 termina koji uvijek igra
+                        u 1vom terminu, a nijednom u preostalih 14
+                            ima 0 za 14 termina: 1 x 14 = 14 (c)
+                            ima 15 za termin 1: 1 x (15 - 1) = 14 (d)
+                            ima ukupno 15 članova za sumu krivih 
+                                T = len([14, 1, 1, 1, ... 1]) = 15
+                                15 x +1 = 15 (e)
+                            ukupno:
+                                14 (c) + 14 (d) + 15 (e) = 43 ukupno
+                tako treba za svakog člana izračunati, sumirati i onda naći kombinaciju gdje je ta suma minimum
+                            
+                idealno bi bilo M igrača x 0 = 0 - no to je nemoguće
+                treba biti minimalna nađena vrijednost
+            
+    algoritmi:
+        uvijek kreni od berger (circle je nešto lošiji)
+            i u principu fiksni je najveći problem, tako da sigurno ima boljih rješenja
+
+        normalne dijegonale 1,2,3..
+            idi redom i probaj dijagonale počevši od 1,2,3,..
+            idi redom i probaj dijagonale počevši od 2,3,4...
+            itd
+
+        suprotne dijegonale 1,-1,-2..
+            idi redom u suprotnom smjeru i probaj dijagonale počevši od 1,-1,-2..
+            idi redom u suprotnom smjeru i probaj dijagonale počevši od 2,1,-1..
+            itd
+
+        brute force
+            ako je mali broj kombinacija - onda isprobaj sve i uzmi najbolju
+                npr. broj igrača je < 6
+
+        usmjereno:
+            MF - fiksni član
+
+            izaberi N redova u kojem ima najviše nepravde:
+                za svaki red
+                    izaberi N najboljih parova čiji članovi u sumi imaju najviše nepravde za taj red
+                        ako je isto - onda po kriteriju kolone - koja ima najviše
+                        ako je isto - onda po kriteriju koliko par ima u sumi za sve redove
+
+                    za svaki taj par:
+                        pokušaj ih zamijeniti međusobno
+                            (ako ih je previše možeš po kriteriju da im baš kolone nisu)
+                            nađi najmanjih N i s njima kreni u sljedeći red
+
+                        ne mora biti da mijenjaš samo 1 par, možeš zamijeniti više njih ...
+                        nakon svake zamjene izračunaj funkciju cilja
+
+                    nakon svakog swap-a - novi izračun funkcije cilja
+                    čak i kad se poveća funkcija cilja - ne odbaciti odmah, već kao što radi
+                        https://en.wikipedia.org/wiki/Simulated_annealing
+                        s brojem iteraciji smanji toleranciju pogoršanja funkcije cilja
+                        te odbacuj samo one preko tolerancije
+
+            dakle, algoritam ne ide u jednom smjeru već ide u više krakova, no ne smije pretjerati jer će biti presporo
+
+        random - i/ili kao https://en.wikipedia.org/wiki/Evolutionary_algorithm ili 
+
+        vidi i ovo:
+            https://realpython.com/python-maze-solver/
+
