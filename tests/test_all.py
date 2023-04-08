@@ -15,12 +15,12 @@ import os, sys
 root_path = os.path.join(os.path.dirname(__file__), "..")
 sys.path.insert(0, root_path)
 
-from round_robin_pairs import berger_tables, circle_tables, round_robin_rounds_to_str_list 
+from round_robin_pairs import berger_tables, circle_tables, round_robin_rounds_to_str_list, equalize_schedules_in_rounds
 from round_robin_pairs.base import FMT_WIDTH
 
-class TestRoundRobin(unittest.TestCase):
+class TestAll(unittest.TestCase):
 
-    def create_rounds_str_list(self, nr_of_players:int, berger:bool, verbose:bool = False):
+    def create_rounds_str_list(self, nr_of_players:int, berger:bool, verbose:bool = False, return_all:bool = False):
         players = list([f"{pl:>{FMT_WIDTH}d}" for pl in range(1,nr_of_players+1)])
         # print(players)
         function = berger_tables if berger else circle_tables
@@ -32,40 +32,12 @@ class TestRoundRobin(unittest.TestCase):
         self.assertEqual(len(expected), len(got), "found some duplicates or missing")
         self.assertEqual(expected, set(got), "some pair combinations not found" )
 
-        # TODO: 
-        if False:
-            # check how just system is:
-            #   - nearly equal times of schedule order 
-            #   - nearly equal times of first in a pair
-            nr_schedules = nr_of_players // 2
-            schedule_dict = {pl : {sch_nr: 0 for sch_nr in range(1, nr_schedules+1)} for pl in players}
-
-            first_dict = {pl : 0 for pl in players}
-
-            for round_pairs in round_robin_rounds:
-                for sch_nr, (pl1, pl2) in enumerate(round_pairs, 1):
-                    schedule_dict[pl1][sch_nr] += 1
-                    schedule_dict[pl2][sch_nr] += 1
-                    first_dict[pl1] +=1
-
-            pprint(schedule_dict)
-            pprint(first_dict)
-
-            first_nearly_equal = ((nr_of_players-1) // 2, (nr_of_players-1) // 2 +1)
-            for pl, first_cnt in first_dict.items():
-                if first_cnt not in first_nearly_equal:
-                    print(f"First unjust: pl={pl} -> first count={first_cnt}")
-
-            sch_nearly_equal = (1, 2)
-            for pl, sch_cnt_dict in schedule_dict.items():
-                for sch_nr, sch_cnt in sch_cnt_dict.items():
-                    if sch_cnt not in sch_nearly_equal:
-                        print(f"Schedule unjust: pl={pl} -> sch={sch_nr}: count={sch_cnt}")
-
-
         rounds_str_list = round_robin_rounds_to_str_list(round_robin_rounds)
         if verbose:
             print("\n".join(rounds_str_list))
+
+        if return_all:
+            return rounds_str_list, round_robin_rounds, players
         return rounds_str_list
 
     def test_4_circle(self):
@@ -84,13 +56,16 @@ class TestRoundRobin(unittest.TestCase):
             ])
 
     def test_5_circle(self):
-        self.assertEqual(self.create_rounds_str_list(5, berger=False, verbose=False), [
+        rounds = self.create_rounds_str_list(5, berger=False, verbose=False)
+        self.assertEqual(rounds, [
             'Round 1: 1-BYE 2-5 3-4',
             'Round 2: 1-5 BYE-4 2-3',
             'Round 3: 1-4 5-3 BYE-2',
             'Round 4: 1-3 4-2 5-BYE',
             'Round 5: 1-2 3-BYE 4-5',
             ])
+
+
 
     def test_6_circle(self):
         self.assertEqual(self.create_rounds_str_list(6, berger=False, verbose=False), [
@@ -144,22 +119,34 @@ class TestRoundRobin(unittest.TestCase):
             ])
 
     def test_5_berger(self):
-        self.assertEqual(self.create_rounds_str_list(5, berger=True, verbose=False), [
+        rounds_str_list, round_robin_rounds, players = \
+                self.create_rounds_str_list(5, berger=True, verbose=False, return_all=True)
+        self.assertEqual(rounds_str_list, [
               "Round 1: 1-BYE 2-5 3-4"
             , "Round 2: BYE-4 5-3 1-2"
             , "Round 3: 2-BYE 3-1 4-5"
             , "Round 4: BYE-5 1-4 2-3"
             , "Round 5: 3-BYE 4-2 5-1"
             ])
+        rounds_new, score_before, score_after = equalize_schedules_in_rounds(round_robin_rounds, verbose=False)
+        self.assertEqual(score_before, 16)
+        self.assertEqual(score_after, 12)
+
 
     def test_6_berger(self):
-        self.assertEqual(self.create_rounds_str_list(6, berger=True, verbose=False), [
+        rounds_str_list, round_robin_rounds, players = \
+            self.create_rounds_str_list(6, berger=True, verbose=False, return_all=True)
+        self.assertEqual(rounds_str_list, [
               "Round 1: 1-6 2-5 3-4"
             , "Round 2: 6-4 5-3 1-2"
             , "Round 3: 2-6 3-1 4-5"
             , "Round 4: 6-5 1-4 2-3"
             , "Round 5: 3-6 4-2 5-1"
             ])
+        rounds_new, score_before, score_after = equalize_schedules_in_rounds(round_robin_rounds, verbose=False)
+        self.assertEqual(score_before, 16)
+        self.assertEqual(score_after, 12)
+
 
     def test_7_berger(self):
         self.assertEqual(self.create_rounds_str_list(7, berger=True, verbose=False), [
@@ -197,7 +184,9 @@ class TestRoundRobin(unittest.TestCase):
             ])
 
     def test_12_berger(self):
-        self.assertEqual(self.create_rounds_str_list(12, berger=True, verbose=False), [
+        rounds_str_list, round_robin_rounds, players = \
+            self.create_rounds_str_list(12, berger=True, verbose=False, return_all=True)
+        self.assertEqual(rounds_str_list, [
               "Round 1: 1-12 2-11 3-10 4-9 5-8 6-7"
             , "Round 2: 12-7 8-6 9-5 10-4 11-3 1-2"
             , "Round 3: 2-12 3-1 4-11 5-10 6-9 7-8"
@@ -210,6 +199,9 @@ class TestRoundRobin(unittest.TestCase):
             , "Round 10: 12-11 1-10 2-9 3-8 4-7 5-6"
             , "Round 11: 6-12 7-5 8-4 9-3 10-2 11-1"
             ])
+        rounds_new, score_before, score_after = equalize_schedules_in_rounds(round_robin_rounds, verbose=False)
+        self.assertEqual(score_before, 70)
+        self.assertEqual(score_after, 62)
 
     def test_14_berger(self):
         self.maxDiff = None
@@ -218,7 +210,9 @@ class TestRoundRobin(unittest.TestCase):
         # players = list([f"{pl}" for pl in range(1,nr_of_players+1)])
         # berger_tables(players, verbose=True)
 
-        self.assertEqual(self.create_rounds_str_list(14, berger=True, verbose=False), [
+        rounds_str_list, round_robin_rounds, players = \
+            self.create_rounds_str_list(14, berger=True, verbose=False, return_all=True)
+        self.assertEqual(rounds_str_list, [
               "Round 1: 1-14 2-13 3-12 4-11 5-10 6-9 7-8"
             , "Round 2: 14-8 9-7 10-6 11-5 12-4 13-3 1-2"
             , "Round 3: 2-14 3-1 4-13 5-12 6-11 7-10 8-9"
@@ -233,6 +227,9 @@ class TestRoundRobin(unittest.TestCase):
             , "Round 12: 14-13 1-12 2-11 3-10 4-9 5-8 6-7"
             , "Round 13: 7-14 8-6 9-5 10-4 11-3 12-2 13-1"
             ])
+        rounds_new, score_before, score_after = equalize_schedules_in_rounds(round_robin_rounds, verbose=False)
+        self.assertEqual(score_before, 16)
+        self.assertEqual(score_after, 12)
 
     def test_16_berger(self):
         self.maxDiff = None

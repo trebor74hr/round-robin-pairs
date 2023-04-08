@@ -23,12 +23,15 @@ Unit testing based on examples in:
 
 """
 
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 from pprint import pprint
 from collections import OrderedDict
+from copy import deepcopy
 
 PlayerName = str
-RoundRobnRounds = List[List[Tuple[PlayerName, PlayerName]]]
+RoundRobinRow = List[Tuple[PlayerName, PlayerName]]
+RoundRobnRounds = List[RoundRobinRow]
+JustScore = float
 
 FMT_WIDTH = 1
 
@@ -106,6 +109,142 @@ def circle_tables(players: List[PlayerName], verbose:bool = False) -> RoundRobnR
 
 
     return output
+
+
+def get_jsut_score(players: List[PlayerName], 
+                   nr_schedules: int, 
+                   round_robin_rounds: RoundRobnRounds, 
+                   verbose:bool = False) -> Tuple[Dict[PlayerName, JustScore], JustScore, Dict, Dict]:
+
+    schedule_dict = {pl : {sch_nr: 0 for sch_nr in range(1, nr_schedules+1)} for pl in players}
+    first_dict = {pl : 0 for pl in players}
+
+    for round_pairs in round_robin_rounds:
+        for sch_nr, (pl1, pl2) in enumerate(round_pairs, 1):
+            schedule_dict[pl1][sch_nr] += 1
+            schedule_dict[pl2][sch_nr] += 1
+            first_dict[pl1] +=1
+
+
+    score_by_players = {pl : 0 for pl in players}
+
+    for pl, sch_cnt_dict in schedule_dict.items():
+        for sch_nr, sch_cnt in sch_cnt_dict.items():
+            # only preffered values is 1 
+            # each player plays in a schedule once 
+            add = abs(sch_cnt -1) 
+            # if sch_cnt==0:
+            score_by_players[pl] += add
+            # a) ako ima 1 za termin -> 0
+            # b) ako ima 2 za termin -> +1
+            # c) ako ima 0 za termin -> +1
+            # d) ako ima 3+ za termin -> +1 * (N-1), npr. 3 ima (3-1) = +2
+
+    score = sum(score_by_players.values())
+    if verbose:
+        # print("== Schedule dict - players by schedule -> count:")
+        # pprint(schedule_dict)
+
+        # RT: print("== First dict - for each player count when is first:")
+        # RT: pprint(first_dict)
+
+        # print(f"== Score by players:")
+        # pprint(score_by_players)
+
+        print(f"== Total score: {score}")
+
+
+    return score_by_players, score, schedule_dict, first_dict
+
+
+def print_unjust_schedules(schedule_dict: Dict) -> int:
+    sch_nearly_equal = (1, 2)
+    cnt = 0
+    for pl, sch_cnt_dict in schedule_dict.items():
+        for sch_nr, sch_cnt in sch_cnt_dict.items():
+            if sch_cnt not in sch_nearly_equal:
+                cnt +=1
+                print(f"Schedule unjust: pl={pl:<4} -> sch={sch_nr}: count={sch_cnt}")
+    return cnt
+
+
+def swap(round_pairs: RoundRobinRow, idxs_to_swap: Tuple[int, int], verbose:bool = False):
+    " swap pairs places based on pair indexes in the row "
+    idx_1, idx_2 = idxs_to_swap
+    if idx_1!=idx_2:
+        pair_1, pair_2 = round_pairs[idx_1], round_pairs[idx_2]
+        round_pairs[idx_1], round_pairs[idx_2] = pair_2, pair_1
+    # if verbose:
+    #     print("swap result", idxs_to_swap, round_pairs)
+
+
+def equalize_schedules_in_rounds(round_robin_rounds: RoundRobnRounds, verbose:bool = False) -> Tuple[RoundRobnRounds, JustScore, JustScore]:
+    " will try to accomplish that each player have nearly equal nr of schedules - to be as just as possible - returns score before and after " 
+    # for pairs_list in rounds: 
+    # check how just system is:
+    #   - nearly equal times of schedule order 
+    #   - nearly equal times of first in a pair
+
+    # if verbose:
+    #     print("=== Rounds - before:")
+    #     pprint(round_robin_rounds)
+
+    players: List[PlayerName] = []
+    schedules: List[int] = []
+    for round_pairs in round_robin_rounds:
+        for sch_nr, (pl1, pl2) in enumerate(round_pairs, 1):
+            if sch_nr not in schedules:
+                schedules.append(sch_nr)
+            if pl1 not in players:
+                players.append(pl1)
+            if pl2 not in players:
+                players.append(pl2)
+
+    nr_of_players = len(players)
+    nr_schedules = nr_of_players // 2
+    if nr_schedules != len(schedules):
+        raise Exception(f"Expected number of schedules {nr_schedules}, bog {len(schedules)}")
+
+    score_by_players, score_before, schedule_dict, first_dict = \
+            get_jsut_score(players=players, 
+                           nr_schedules=nr_schedules, 
+                           round_robin_rounds=round_robin_rounds, 
+                           verbose=verbose)
+    if verbose:
+        print_unjust_schedules(schedule_dict)
+
+    round_robin_rounds_new = deepcopy(round_robin_rounds)
+    nr_rounds = len(round_robin_rounds)
+    for rnr, round_pairs in enumerate(round_robin_rounds, 0):
+        round_robin_rounds_new 
+        # 1. the most simple method:
+        #    berger and cricle put fixed player in first schedule
+        #    this method swaps first pair based on round number
+        idxs_to_swap = [0, rnr % nr_schedules]
+        swap(round_pairs, idxs_to_swap, verbose=verbose)
+
+    # if verbose:
+    #     first_nearly_equal = ((nr_of_players-1) // 2, (nr_of_players-1) // 2 +1)
+    #     for pl, first_cnt in first_dict.items():
+    #         if first_cnt not in first_nearly_equal:
+    #             print(f"First unjust: pl={pl} -> first count={first_cnt}")
+
+    _, score_after, schedule_dict, _ = \
+            get_jsut_score(players=players, 
+                           nr_schedules=nr_schedules, 
+                           round_robin_rounds=round_robin_rounds, 
+                           verbose=verbose)
+    if verbose:
+        print("=== Schedule dict - after:")
+        print_unjust_schedules(schedule_dict)
+        # print("=== Rounds - after:")
+        # pprint(round_robin_rounds)
+
+        print(f"Score benefit: {score_before} => {score_after}, gain (- is good): {score_after - score_before}")
+
+
+    return round_robin_rounds_new, score_before, score_after
+
 
 
 def round_robin_rounds_to_str_list(round_robin_rounds: RoundRobnRounds) -> List[str]:
