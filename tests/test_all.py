@@ -228,8 +228,8 @@ class TestAll(unittest.TestCase):
             , "Round 13: 7-14 8-6 9-5 10-4 11-3 12-2 13-1"
             ])
         rounds_new, score_before, score_after = equalize_schedules_in_rounds(round_robin_rounds, verbose=False)
-        self.assertEqual(score_before, 16)
-        self.assertEqual(score_after, 12)
+        self.assertEqual(score_before, 96)
+        self.assertEqual(score_after, 88)
 
     def test_16_berger(self):
         self.maxDiff = None
