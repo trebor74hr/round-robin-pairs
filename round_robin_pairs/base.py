@@ -24,7 +24,7 @@ Unit testing based on examples in:
 """
 
 from typing import List, Tuple, Dict, Optional
-# from pprint import pprint
+from pprint import pprint
 from collections import OrderedDict
 from copy import deepcopy
 import enum
@@ -179,13 +179,28 @@ def get_just_score(players: List[PlayerName],
         for sch_nr, sch_cnt in sch_cnt_dict.items():
             # only preffered values is 1 
             # each player plays in a schedule once 
-            add = abs(sch_cnt -1) 
-            # if sch_cnt==0:
+            if True:
+                if sch_cnt==2:
+                    add = 0
+                elif sch_cnt<2:
+                    # 1 -> 1, 0->2
+                    add = (2 - sch_cnt)
+                else:
+                    # 3 -> 2, 4 -> 3, ...
+                    add = (sch_cnt - 2) + 1
+            else:
+                add = abs(sch_cnt -1) 
             score_by_players[pl] += add
-            # a) ako ima 1 za termin -> 0
-            # b) ako ima 2 za termin -> +1
-            # c) ako ima 0 za termin -> +1
-            # d) ako ima 3+ za termin -> +1 * (N-1), npr. 3 ima (3-1) = +2
+            # new:
+            #   a) ako ima 1 za termin -> 1
+            #   b) ako ima 2 za termin -> 0
+            #   c) ako ima 0 za termin -> -2
+            #   d) ako ima 3+ za termin -> +1 * (N-2), npr. 3 ima (3-1) = +2
+            # old:
+            #   a) ako ima 1 za termin -> 0
+            #   b) ako ima 2 za termin -> +1
+            #   c) ako ima 0 za termin -> +1
+            #   d) ako ima 3+ za termin -> +1 * (N-1), npr. 3 ima (3-1) = +2
 
     score = sum(score_by_players.values())
     if verbose:
@@ -329,9 +344,12 @@ def equalize_schedules_in_rounds(round_robin_rounds: RoundRobnRounds, eq_type: E
         print_unjust_schedules(schedule_dict)
         print("=== Rounds - after:")
         pprint_player_pairs_row(round_robin_rounds, 2)
-        # nr_rounds = len(players) // 2
-        # best_score = len(players) * 
+
+        # best score
+        # od 13 rundi, svaku igra 2x, osim jedne. svaki igrač onda ima po 1. za 14 igrača -> 14 x 1
+        score_best = len(players) * 1
         print(f"=== Score benefit: {score_before} => {score_after}, gain (- is good): {score_after - score_before}")
+        print(f"    Score to best / {score_best} (smaller the better, 0 is the best): {score_after - score_best}")
 
 
     return round_robin_rounds, score_before, score_after
