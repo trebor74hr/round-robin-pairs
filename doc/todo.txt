@@ -32,10 +32,35 @@ RL 230405
         uvijek kreni od berger (circle je nešto lošiji)
             i u principu fiksni je najveći problem, tako da sigurno ima boljih rješenja
 
-        normalne dijegonale 1,2,3..
+        ++ normalne dijegonale 1,2,3..
             idi redom i probaj dijagonale počevši od 1,2,3,..
             idi redom i probaj dijagonale počevši od 2,3,4...
             itd
+
+            0 1 2 3
+            0 1 2 3
+            0 1 2 3
+            ...
+
+        **TODO:**
+            3 2 1 0
+            3 2 1 0
+            3 2 1 0
+            ...
+
+        **TODO:**
+            0 1 2 3
+            3 2 1 0
+            0 1 2 3
+            3 2 1 0
+            ...
+
+         **todo**
+            3 2 1 0
+            0 1 2 3
+            3 2 1 0
+            0 1 2 3
+            ...
 
         suprotne dijegonale 1,-1,-2..
             idi redom u suprotnom smjeru i probaj dijagonale počevši od 1,-1,-2..

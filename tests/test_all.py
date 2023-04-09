@@ -112,11 +112,16 @@ class TestAll(unittest.TestCase):
             ])
 
     def test_4_berger(self):
-        self.assertEqual(self.create_rounds_str_list(4, berger=True, verbose=False), [
+        rounds_str_list, round_robin_rounds, players = \
+            self.create_rounds_str_list(4, berger=True, verbose=False, return_all=True)
+        self.assertEqual(rounds_str_list, [
               "Round 1: 1-4 2-3" 
             , "Round 2: 4-3 1-2" 
             , "Round 3: 2-4 3-1" 
             ])
+        rounds_new, score_before, score_after = equalize_schedules_in_rounds(round_robin_rounds, verbose=False)
+        self.assertEqual(score_before, 6)
+        self.assertEqual(score_after - score_before, 0)
 
     def test_5_berger(self):
         rounds_str_list, round_robin_rounds, players = \
@@ -130,7 +135,7 @@ class TestAll(unittest.TestCase):
             ])
         rounds_new, score_before, score_after = equalize_schedules_in_rounds(round_robin_rounds, verbose=False)
         self.assertEqual(score_before, 16)
-        self.assertEqual(score_after, 12)
+        self.assertEqual(score_after - score_before, -4)
 
 
     def test_6_berger(self):
@@ -145,7 +150,7 @@ class TestAll(unittest.TestCase):
             ])
         rounds_new, score_before, score_after = equalize_schedules_in_rounds(round_robin_rounds, verbose=False)
         self.assertEqual(score_before, 16)
-        self.assertEqual(score_after, 12)
+        self.assertEqual(score_after - score_before , -4)
 
 
     def test_7_berger(self):
@@ -160,7 +165,9 @@ class TestAll(unittest.TestCase):
             ])
 
     def test_8_berger(self):
-        self.assertEqual(self.create_rounds_str_list(8, berger=True, verbose=False), [
+        rounds_str_list, round_robin_rounds, players = \
+            self.create_rounds_str_list(8, berger=True, verbose=False, return_all=True)
+        self.assertEqual(rounds_str_list, [
               "Round 1: 1-8 2-7 3-6 4-5"
             , "Round 2: 8-5 6-4 7-3 1-2"
             , "Round 3: 2-8 3-1 4-7 5-6"
@@ -169,9 +176,14 @@ class TestAll(unittest.TestCase):
             , "Round 6: 8-7 1-6 2-5 3-4"
             , "Round 7: 4-8 5-3 6-2 7-1"
             ])
+        rounds_new, score_before, score_after = equalize_schedules_in_rounds(round_robin_rounds, verbose=False)
+        self.assertEqual(score_before, 30)
+        self.assertEqual(score_after - score_before, -2)
 
     def test_10_berger(self):
-        self.assertEqual(self.create_rounds_str_list(10, berger=True, verbose=False), [
+        rounds_str_list, round_robin_rounds, players = \
+            self.create_rounds_str_list(10, berger=True, verbose=False, return_all=True)
+        self.assertEqual(rounds_str_list, [
               "Round 1: 1-10 2-9 3-8 4-7 5-6"
             , "Round 2: 10-6 7-5 8-4 9-3 1-2"
             , "Round 3: 2-10 3-1 4-9 5-8 6-7"
@@ -182,6 +194,9 @@ class TestAll(unittest.TestCase):
             , "Round 8: 10-9 1-8 2-7 3-6 4-5"
             , "Round 9: 5-10 6-4 7-3 8-2 9-1"
             ])
+        rounds_new, score_before, score_after = equalize_schedules_in_rounds(round_robin_rounds, verbose=False)
+        self.assertEqual(score_before, 48)
+        self.assertEqual(score_after - score_before, -4)
 
     def test_12_berger(self):
         rounds_str_list, round_robin_rounds, players = \
@@ -201,7 +216,7 @@ class TestAll(unittest.TestCase):
             ])
         rounds_new, score_before, score_after = equalize_schedules_in_rounds(round_robin_rounds, verbose=False)
         self.assertEqual(score_before, 70)
-        self.assertEqual(score_after, 62)
+        self.assertEqual(score_after - score_before, -8)
 
     def test_14_berger(self):
         self.maxDiff = None
@@ -229,12 +244,13 @@ class TestAll(unittest.TestCase):
             ])
         rounds_new, score_before, score_after = equalize_schedules_in_rounds(round_robin_rounds, verbose=False)
         self.assertEqual(score_before, 96)
-        self.assertEqual(score_after, 88)
+        self.assertEqual(score_after - score_before, -8)
 
     def test_16_berger(self):
         self.maxDiff = None
-
-        self.assertEqual(self.create_rounds_str_list(16, berger=True, verbose=False), [
+        rounds_str_list, round_robin_rounds, players = \
+            self.create_rounds_str_list(16, berger=True, verbose=False, return_all=True)
+        self.assertEqual(rounds_str_list, [
               "Round 1: 1-16 2-15 3-14 4-13 5-12 6-11 7-10 8-9"
             , "Round 2: 16-9 10-8 11-7 12-6 13-5 14-4 15-3 1-2"
             , "Round 3: 2-16 3-1 4-15 5-14 6-13 7-12 8-11 9-10"
@@ -251,6 +267,9 @@ class TestAll(unittest.TestCase):
             , "Round 14: 16-15 1-14 2-13 3-12 4-11 5-10 6-9 7-8"
             , "Round 15: 8-16 9-7 10-6 11-5 12-4 13-3 14-2 15-1"
             ])
+        rounds_new, score_before, score_after = equalize_schedules_in_rounds(round_robin_rounds, verbose=False)
+        self.assertEqual(score_before, 126)
+        self.assertEqual(score_after - score_before, -10)
 
 if __name__ == '__main__':
     unittest.main()
