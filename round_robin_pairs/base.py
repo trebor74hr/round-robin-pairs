@@ -23,10 +23,11 @@ Unit testing based on examples in:
 
 """
 
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Optional
 from pprint import pprint
 from collections import OrderedDict
 from copy import deepcopy
+import enum
 
 PlayerName = str
 RoundRobinRow = List[Tuple[PlayerName, PlayerName]]
@@ -35,11 +36,27 @@ JustScore = float
 
 FMT_WIDTH = 1
 
-def pp_players_row(players_row):
-    return " ".join([f"{pl:>{FMT_WIDTH}}" for pl in players_row])
+def pp_players_row(players_row, fmt_width: int = FMT_WIDTH):
+    return " ".join([f"{pl:>{fmt_width}}" for pl in players_row])
 
-def pp_player_pairs_row(player_pairs_row):
-    return " ".join([f"{pl1:>{FMT_WIDTH}}-{pl2:>{FMT_WIDTH}}" for pl1, pl2 in player_pairs_row])
+def get_fmt_same_width(fmt_width: Optional[int] = None):
+    if not fmt_width:
+        fmt_width = FMT_WIDTH
+    return f"{{:>{fmt_width}}}-{{:>{fmt_width}}}" 
+
+def pp_player_pairs_row(player_pairs_row: RoundRobinRow, fmt_width: int = FMT_WIDTH) -> str:
+    fmt_same_width = get_fmt_same_width(fmt_width)
+    return " ".join([fmt_same_width.format(p1, p2) for pl1, pl2 in player_pairs_row])
+
+def round_robin_rounds_to_str_list(round_robin_rounds: RoundRobnRounds, fmt_width:int = FMT_WIDTH) -> List[str]:
+    fmt_same_width = get_fmt_same_width(fmt_width)
+    output = []
+    for rd, game_round in enumerate(round_robin_rounds, 1):
+        output.append("Round {}: {}".format(rd, " ".join([fmt_same_width.format(p1, p2) for p1, p2 in game_round])))
+    return output
+
+def pprint_player_pairs_row(round_robin_rounds: RoundRobnRounds, fmt_width:int = FMT_WIDTH) -> None:
+    print("\n".join(round_robin_rounds_to_str_list(round_robin_rounds, fmt_width)))
 
 # https://en.wikipedia.org/wiki/Round-robin_tournament
 def berger_tables(players: List[PlayerName], verbose:bool = False) -> RoundRobnRounds:
@@ -178,16 +195,25 @@ def swap(round_pairs: RoundRobinRow, idxs_to_swap: Tuple[int, int], verbose:bool
     #     print("swap result", idxs_to_swap, round_pairs)
 
 
-def equalize_schedules_in_rounds(round_robin_rounds: RoundRobnRounds, verbose:bool = False) -> Tuple[RoundRobnRounds, JustScore, JustScore]:
+class EqualizeType(str, enum.Enum):
+    DIAG_L2R = "DIAG_L2R"
+    DIAG_R2L = "DIAG_R2L"
+
+    @classmethod
+    def values(cls):
+        return [k for k,v in EqualizeType.__members__.items()]
+
+
+def equalize_schedules_in_rounds(round_robin_rounds: RoundRobnRounds, eq_type: EqualizeType, verbose:bool = False) -> Tuple[RoundRobnRounds, JustScore, JustScore]:
     " will try to accomplish that each player have nearly equal nr of schedules - to be as just as possible - returns score before and after " 
     # for pairs_list in rounds: 
     # check how just system is:
     #   - nearly equal times of schedule order 
     #   - nearly equal times of first in a pair
 
-    # if verbose:
-    #     print("=== Rounds - before:")
-    #     pprint(round_robin_rounds)
+    if verbose:
+        print("=== Rounds - before:")
+        pprint_player_pairs_row(round_robin_rounds, 2)
 
     players: List[PlayerName] = []
     schedules: List[int] = []
@@ -213,14 +239,22 @@ def equalize_schedules_in_rounds(round_robin_rounds: RoundRobnRounds, verbose:bo
     if verbose:
         print_unjust_schedules(schedule_dict)
 
-    round_robin_rounds_new = deepcopy(round_robin_rounds)
+    round_robin_rounds = deepcopy(round_robin_rounds)
+
     nr_rounds = len(round_robin_rounds)
     for rnr, round_pairs in enumerate(round_robin_rounds, 0):
-        round_robin_rounds_new 
         # 1. the most simple method:
         #    berger and cricle put fixed player in first schedule
         #    this method swaps first pair based on round number
-        idxs_to_swap = [0, rnr % nr_schedules]
+        if eq_type==EqualizeType.DIAG_L2R:
+            idxs_to_swap = [0, rnr % nr_schedules]
+            # print(rnr, idxs_to_swap)
+        elif eq_type==EqualizeType.DIAG_R2L:
+            idxs_to_swap = [0, -1 * ((rnr+1) % nr_schedules)]
+            # print(rnr, idxs_to_swap)
+        else:
+            raise Exception(f"Unknown for {eq_type}. Select one of: {', '.join(EqualizeType.values())}")
+
         swap(round_pairs, idxs_to_swap, verbose=verbose)
 
     # if verbose:
@@ -243,15 +277,10 @@ def equalize_schedules_in_rounds(round_robin_rounds: RoundRobnRounds, verbose:bo
         print(f"Score benefit: {score_before} => {score_after}, gain (- is good): {score_after - score_before}")
 
 
-    return round_robin_rounds_new, score_before, score_after
+    return round_robin_rounds, score_before, score_after
 
 
 
-def round_robin_rounds_to_str_list(round_robin_rounds: RoundRobnRounds) -> List[str]:
-    output = []
-    for rd, game_round in enumerate(round_robin_rounds, 1):
-        output.append("Round {}: {}".format(rd, " ".join([f"{p1}-{p2}" for p1, p2 in game_round])))
-    return output
 
 
 if __name__=="__main__":

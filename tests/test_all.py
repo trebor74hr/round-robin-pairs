@@ -15,7 +15,7 @@ import os, sys
 root_path = os.path.join(os.path.dirname(__file__), "..")
 sys.path.insert(0, root_path)
 
-from round_robin_pairs import berger_tables, circle_tables, round_robin_rounds_to_str_list, equalize_schedules_in_rounds
+from round_robin_pairs import berger_tables, circle_tables, round_robin_rounds_to_str_list, equalize_schedules_in_rounds, EqualizeType, pprint_player_pairs_row
 from round_robin_pairs.base import FMT_WIDTH
 
 class TestAll(unittest.TestCase):
@@ -119,7 +119,7 @@ class TestAll(unittest.TestCase):
             , "Round 2: 4-3 1-2" 
             , "Round 3: 2-4 3-1" 
             ])
-        rounds_new, score_before, score_after = equalize_schedules_in_rounds(round_robin_rounds, verbose=False)
+        rounds_new, score_before, score_after = equalize_schedules_in_rounds(round_robin_rounds, eq_type="DIAG_L2R", verbose=False)
         self.assertEqual(score_before, 6)
         self.assertEqual(score_after - score_before, 0)
 
@@ -133,7 +133,7 @@ class TestAll(unittest.TestCase):
             , "Round 4: BYE-5 1-4 2-3"
             , "Round 5: 3-BYE 4-2 5-1"
             ])
-        rounds_new, score_before, score_after = equalize_schedules_in_rounds(round_robin_rounds, verbose=False)
+        rounds_new, score_before, score_after = equalize_schedules_in_rounds(round_robin_rounds, eq_type="DIAG_L2R", verbose=False)
         self.assertEqual(score_before, 16)
         self.assertEqual(score_after - score_before, -4)
 
@@ -148,7 +148,7 @@ class TestAll(unittest.TestCase):
             , "Round 4: 6-5 1-4 2-3"
             , "Round 5: 3-6 4-2 5-1"
             ])
-        rounds_new, score_before, score_after = equalize_schedules_in_rounds(round_robin_rounds, verbose=False)
+        rounds_new, score_before, score_after = equalize_schedules_in_rounds(round_robin_rounds, eq_type="DIAG_L2R", verbose=False)
         self.assertEqual(score_before, 16)
         self.assertEqual(score_after - score_before , -4)
 
@@ -176,7 +176,7 @@ class TestAll(unittest.TestCase):
             , "Round 6: 8-7 1-6 2-5 3-4"
             , "Round 7: 4-8 5-3 6-2 7-1"
             ])
-        rounds_new, score_before, score_after = equalize_schedules_in_rounds(round_robin_rounds, verbose=False)
+        rounds_new, score_before, score_after = equalize_schedules_in_rounds(round_robin_rounds, eq_type="DIAG_L2R", verbose=False)
         self.assertEqual(score_before, 30)
         self.assertEqual(score_after - score_before, -2)
 
@@ -194,7 +194,7 @@ class TestAll(unittest.TestCase):
             , "Round 8: 10-9 1-8 2-7 3-6 4-5"
             , "Round 9: 5-10 6-4 7-3 8-2 9-1"
             ])
-        rounds_new, score_before, score_after = equalize_schedules_in_rounds(round_robin_rounds, verbose=False)
+        rounds_new, score_before, score_after = equalize_schedules_in_rounds(round_robin_rounds, eq_type="DIAG_L2R", verbose=False)
         self.assertEqual(score_before, 48)
         self.assertEqual(score_after - score_before, -4)
 
@@ -214,7 +214,7 @@ class TestAll(unittest.TestCase):
             , "Round 10: 12-11 1-10 2-9 3-8 4-7 5-6"
             , "Round 11: 6-12 7-5 8-4 9-3 10-2 11-1"
             ])
-        rounds_new, score_before, score_after = equalize_schedules_in_rounds(round_robin_rounds, verbose=False)
+        rounds_new, score_before, score_after = equalize_schedules_in_rounds(round_robin_rounds, eq_type="DIAG_L2R", verbose=False)
         self.assertEqual(score_before, 70)
         self.assertEqual(score_after - score_before, -8)
 
@@ -242,9 +242,21 @@ class TestAll(unittest.TestCase):
             , "Round 12: 14-13 1-12 2-11 3-10 4-9 5-8 6-7"
             , "Round 13: 7-14 8-6 9-5 10-4 11-3 12-2 13-1"
             ])
-        rounds_new, score_before, score_after = equalize_schedules_in_rounds(round_robin_rounds, verbose=False)
+        # print("== Rounds Berger:"); pprint_player_pairs_row(round_robin_rounds)
+
+        rounds_new, score_before, score_after = equalize_schedules_in_rounds(round_robin_rounds, eq_type="DIAG_L2R", verbose=False)
+        self.assertNotEqual(rounds_new, round_robin_rounds)
+        # print("== Rounds EQ-L2R:"); pprint_player_pairs_row(rounds_new)
         self.assertEqual(score_before, 96)
         self.assertEqual(score_after - score_before, -8)
+
+        rounds_new2, score_before, score_after = equalize_schedules_in_rounds(round_robin_rounds, eq_type="DIAG_R2L", verbose=False)
+        self.assertNotEqual(rounds_new2, round_robin_rounds)
+        self.assertNotEqual(rounds_new2, rounds_new)
+        # print("== Rounds EQ-R2L:"); pprint_player_pairs_row(rounds_new2)
+        self.assertEqual(score_before, 96)
+        self.assertEqual(score_after - score_before, -10)
+
 
     def test_16_berger(self):
         self.maxDiff = None
@@ -267,7 +279,7 @@ class TestAll(unittest.TestCase):
             , "Round 14: 16-15 1-14 2-13 3-12 4-11 5-10 6-9 7-8"
             , "Round 15: 8-16 9-7 10-6 11-5 12-4 13-3 14-2 15-1"
             ])
-        rounds_new, score_before, score_after = equalize_schedules_in_rounds(round_robin_rounds, verbose=False)
+        rounds_new, score_before, score_after = equalize_schedules_in_rounds(round_robin_rounds, eq_type="DIAG_L2R", verbose=False)
         self.assertEqual(score_before, 126)
         self.assertEqual(score_after - score_before, -10)
 
