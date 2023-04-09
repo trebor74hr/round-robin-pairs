@@ -246,16 +246,32 @@ class TestAll(unittest.TestCase):
 
         rounds_new, score_before, score_after = equalize_schedules_in_rounds(round_robin_rounds, eq_type="DIAG_L2R", verbose=False)
         self.assertNotEqual(rounds_new, round_robin_rounds)
-        # print("== Rounds EQ-L2R:"); pprint_player_pairs_row(rounds_new)
+        # print("== Rounds EQ-L2R:"); pprint_player_pairs_row(rounds_new, 2)
         self.assertEqual(score_before, 96)
         self.assertEqual(score_after - score_before, -8)
 
         rounds_new2, score_before, score_after = equalize_schedules_in_rounds(round_robin_rounds, eq_type="DIAG_R2L", verbose=False)
         self.assertNotEqual(rounds_new2, round_robin_rounds)
         self.assertNotEqual(rounds_new2, rounds_new)
-        # print("== Rounds EQ-R2L:"); pprint_player_pairs_row(rounds_new2)
+        # print("== Rounds EQ-R2L:"); pprint_player_pairs_row(rounds_new2, 2)
         self.assertEqual(score_before, 96)
         self.assertEqual(score_after - score_before, -10)
+
+        rounds_new3, score_before, score_after = equalize_schedules_in_rounds(round_robin_rounds, eq_type="DIAG_L2R2L", verbose=False)
+        self.assertNotEqual(rounds_new3, round_robin_rounds)
+        self.assertNotEqual(rounds_new3, rounds_new2)
+        self.assertNotEqual(rounds_new3, rounds_new)
+        # print("== Rounds EQ-R2L:"); pprint_player_pairs_row(rounds_new3, 2)
+        self.assertEqual(score_before, 96)
+        self.assertEqual(score_after - score_before, -10)
+
+        rounds_new4, score_before, score_after = equalize_schedules_in_rounds(round_robin_rounds, eq_type="DIAG_R2L2R", players=players, verbose=True)
+        self.assertNotEqual(rounds_new4, round_robin_rounds)
+        self.assertNotEqual(rounds_new4, rounds_new2)
+        self.assertNotEqual(rounds_new4, rounds_new)
+        # print("== Rounds EQ-R2L:"); pprint_player_pairs_row(rounds_new4, 2)
+        self.assertEqual(score_before, 96)
+        self.assertEqual(score_after - score_before, -12)
 
 
     def test_16_berger(self):
