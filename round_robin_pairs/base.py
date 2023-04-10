@@ -254,7 +254,12 @@ class EqualizeType(str, enum.Enum):
         return [k for k,v in EqualizeType.__members__.items()]
 
 
-def equalize_schedules_in_rounds(round_robin_rounds: RoundRobnRounds, eq_type: EqualizeType, players: Optional[List[PlayerName]] = None, verbose:bool = False) -> Tuple[RoundRobnRounds, JustScore, JustScore]:
+def equalize_schedules_in_rounds(
+        round_robin_rounds: RoundRobnRounds, 
+        eq_type: EqualizeType, 
+        offset_x: int = 0,
+        players: Optional[List[PlayerName]] = None, 
+        verbose:bool = False) -> Tuple[RoundRobnRounds, JustScore, JustScore]:
     " will try to accomplish that each player have nearly equal nr of schedules - to be as just as possible - returns score before and after " 
     # players if provided - only for correct order
     #
@@ -271,7 +276,7 @@ def equalize_schedules_in_rounds(round_robin_rounds: RoundRobnRounds, eq_type: E
     schedules: List[int] = []
     for round_pairs in round_robin_rounds:
         for sch_nr, (pl1, pl2) in enumerate(round_pairs, 1):
-            if sch_nr not in schedules:
+            if sch_nr not in schedules:  # TODO: silly, this is fixed
                 schedules.append(sch_nr)
             if pl1 not in players_detect:
                 players_detect.append(pl1)
@@ -286,6 +291,7 @@ def equalize_schedules_in_rounds(round_robin_rounds: RoundRobnRounds, eq_type: E
         players = players_detect
 
     nr_of_players = len(players)
+    # TODO: consider: nr_schedules = nr_of_players // 2 + nr_of_players % 2
     nr_schedules = nr_of_players // 2
     if nr_schedules != len(schedules):
         raise Exception(f"Expected number of schedules {nr_schedules}, got {len(schedules)}")
@@ -301,30 +307,37 @@ def equalize_schedules_in_rounds(round_robin_rounds: RoundRobnRounds, eq_type: E
     round_robin_rounds = deepcopy(round_robin_rounds)
 
     nr_rounds = len(round_robin_rounds)
+    idx_fixed = 0
     for rnr, round_pairs in enumerate(round_robin_rounds, 0):
         # 1. the most simple method:
         #    berger and cricle put fixed player in first schedule
         #    this method swaps first pair based on round number
         if eq_type==EqualizeType.DIAG_L2R:
-            idxs_to_swap = [0, rnr % nr_schedules]
-            # print(rnr, idxs_to_swap)
+            idx_other = rnr % nr_schedules
+            # print(rnr, idx_other)
         elif eq_type==EqualizeType.DIAG_R2L:
-            idxs_to_swap = [0, -1 * ((rnr+1) % nr_schedules)]
+            idx_other = -1 * ((rnr+1) % nr_schedules)
         elif eq_type==EqualizeType.DIAG_L2R2L:
             div = rnr // nr_schedules
             if div % 2 == 0:
-                idxs_to_swap = [0, rnr % nr_schedules]
+                idx_other = rnr % nr_schedules
             else:
-                idxs_to_swap = [0, -1 * ((rnr+2) % nr_schedules)]
-            # print(idxs_to_swap)
+                idx_other = -1 * ((rnr+2) % nr_schedules)
+            # print(idx_other)
         elif eq_type==EqualizeType.DIAG_R2L2R:
             div = rnr // nr_schedules
             if div % 2 == 0:
-                idxs_to_swap = [0, -1 * ((rnr+1) % nr_schedules)]
+                idx_other = -1 * ((rnr+1) % nr_schedules)
             else:
-                idxs_to_swap = [0, ((rnr+1) % nr_schedules)]
+                idx_other = ((rnr+1) % nr_schedules)
         else:
             raise Exception(f"Unknown for {eq_type}. Select one of: {', '.join(EqualizeType.values())}")
+
+        if offset_x:
+            idx_other = (idx_other + offset_x) % nr_schedules
+
+        idxs_to_swap = [idx_fixed, idx_other]
+        # if verbose: print(rnr, div, idxs_to_swap)
 
         swap(round_pairs, idxs_to_swap, verbose=verbose)
 
@@ -355,6 +368,43 @@ def equalize_schedules_in_rounds(round_robin_rounds: RoundRobnRounds, eq_type: E
     return round_robin_rounds, score_before, score_after
 
 
+def find_best_equalize_solution(
+        round_robin_rounds: RoundRobnRounds, 
+        players: Optional[List[PlayerName]] = None, 
+        verbose:bool = False) -> Tuple[RoundRobnRounds, JustScore, JustScore, int, int]:
+
+    nr_schedules = len(round_robin_rounds[0])
+    best_score = None
+    best_eq_type = None
+    best_offset_x = None
+    fixed_score_before = None
+    best_rounds = None
+
+    for eq_type in ("DIAG_L2R", "DIAG_R2L", "DIAG_L2R2L", "DIAG_R2L2R",):
+        # for offset_x in range(0, nr_schedules):
+        for offset_x in range(0, nr_schedules):
+            rounds_new, score_before, score_after = equalize_schedules_in_rounds(round_robin_rounds, eq_type=eq_type, offset_x=offset_x, players=players, verbose=False)
+            if fixed_score_before is None:
+                fixed_score_before = score_before
+            else:
+                assert fixed_score_before == score_before
+
+            if best_score is None or score_after < best_score:
+                best_score = score_after 
+                best_eq_type = eq_type
+                best_offset_x = offset_x
+                best_rounds = rounds_new
+                selected = True
+            else:
+                selected = False
+            if verbose:
+                print(f"-- FIND: eq={eq_type:<10} + {offset_x:>2}, before={score_before:>3}, after={score_after:>3}, gain={score_after-score_before:>3}  {'*' if selected else ' '}")
+
+    if verbose:
+        # just to show verbose data
+        equalize_schedules_in_rounds(round_robin_rounds, eq_type=best_eq_type, offset_x=best_offset_x, players=players, verbose=True)
+
+    return best_rounds, fixed_score_before, best_score, best_eq_type, best_offset_x
 
 
 
