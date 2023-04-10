@@ -457,6 +457,7 @@ def equalize_schedules_in_rounds(
 class BestResult:
     players : List[PlayerName] = field(repr=False)
     # nr_schedules : int = field(repr=False)
+    has_ideal: bool = field(init=False) 
     best_score: Optional[JustScore] = None
     best_eq_type: Optional[EqualizeType] = None
     best_offset_x: Optional[int] = None
@@ -465,6 +466,7 @@ class BestResult:
     score_ideal: JustScore = field(init=False, repr=True)
 
     def __post_init__(self):
+        self.has_ideal = not has_not_ideal(len(self.players))
         self.score_ideal = len(self.players) * 1
 
     def is_ideal(self):
@@ -499,6 +501,8 @@ def _find_best_iteration(
 
     return selected
 
+def has_not_ideal(nr_of_players:int) -> bool:
+    return (nr_of_players - 4) % 6 == 0
 
 def find_best_equalize_solution(
         round_robin_rounds: RoundRobnRounds, 
@@ -506,32 +510,43 @@ def find_best_equalize_solution(
         brute_force_factor: Optional[int] = 1000,
         verbose:bool = False) -> BestResult:
 
+    nr_of_players = len(players)
+
     nr_schedules = len(round_robin_rounds[0])
 
     best_result = BestResult(players=players)
+    if best_result.has_ideal:
+        _find_best_iteration(
+            round_robin_rounds= round_robin_rounds,
+            eq_type = "DIAG_R2L2R",
+            offset_x = 0,
+            best_result = best_result,
+            players = players,
+            verbose = verbose,
+            )
+    else:
+        for eq_type in ("DIAG_L2R", "DIAG_R2L", "DIAG_L2R2L", "DIAG_R2L2R", "CROSS"):
+            # for offset_x in range(0, nr_schedules):
+            for offset_x in range(0, nr_schedules):
+                _find_best_iteration(
+                    round_robin_rounds= round_robin_rounds,
+                    eq_type = eq_type,
+                    offset_x = offset_x,
+                    best_result = best_result,
+                    players = players,
+                    verbose = verbose,
+                    )
 
-    for eq_type in ("DIAG_L2R", "DIAG_R2L", "DIAG_L2R2L", "DIAG_R2L2R", "CROSS"):
-        # for offset_x in range(0, nr_schedules):
-        for offset_x in range(0, nr_schedules):
-            _find_best_iteration(
-                round_robin_rounds= round_robin_rounds,
-                eq_type = eq_type,
-                offset_x = offset_x,
-                best_result = best_result,
-                players = players,
-                verbose = verbose,
-                )
-
-    if brute_force_factor:
-        for random_nr in range(0, nr_schedules * brute_force_factor):
-            selected = _find_best_iteration(
-                round_robin_rounds= round_robin_rounds,
-                eq_type = EqualizeType.BRUTE_FORCE,
-                best_result = best_result,
-                offset_x = 0,
-                players = players,
-                verbose = verbose,
-                )
+        if brute_force_factor:
+            for random_nr in range(0, nr_schedules * brute_force_factor):
+                selected = _find_best_iteration(
+                    round_robin_rounds= round_robin_rounds,
+                    eq_type = EqualizeType.BRUTE_FORCE,
+                    best_result = best_result,
+                    offset_x = 0,
+                    players = players,
+                    verbose = verbose,
+                    )
 
     if verbose:
         # just to show verbose data
