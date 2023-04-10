@@ -18,7 +18,7 @@ sys.path.insert(0, root_path)
 from round_robin_pairs import (
         berger_tables, circle_tables, round_robin_rounds_to_str_list,
         equalize_schedules_in_rounds, EqualizeType, pprint_player_pairs_row,
-        find_best_equalize_solution, has_not_ideal,
+        find_best_equalize_solution, has_ideal,
         )
 from round_robin_pairs.base import FMT_WIDTH
 
@@ -589,30 +589,30 @@ class TestAll(unittest.TestCase):
 
 
     def test_has_not_ideal(self):
-        self.assertEqual(has_not_ideal(4 ), True )
-        self.assertEqual(has_not_ideal(6 ), False)
-        self.assertEqual(has_not_ideal(8 ), False)
-        self.assertEqual(has_not_ideal(10), True )
-        self.assertEqual(has_not_ideal(12), False)
-        self.assertEqual(has_not_ideal(14), False)
-        self.assertEqual(has_not_ideal(16), True )
-        self.assertEqual(has_not_ideal(18), False)
-        self.assertEqual(has_not_ideal(20), False)
-        self.assertEqual(has_not_ideal(22), True )
-        self.assertEqual(has_not_ideal(24), False)
-        self.assertEqual(has_not_ideal(26), False)
-        self.assertEqual(has_not_ideal(28), True )
-        self.assertEqual(has_not_ideal(30), False)
-        self.assertEqual(has_not_ideal(32), False)
-        self.assertEqual(has_not_ideal(34), True )
-        self.assertEqual(has_not_ideal(36), False)
-        self.assertEqual(has_not_ideal(38), False)
-        self.assertEqual(has_not_ideal(40), True )
-        self.assertEqual(has_not_ideal(42), False)
-        self.assertEqual(has_not_ideal(44), False)
-        self.assertEqual(has_not_ideal(46), True )
-        self.assertEqual(has_not_ideal(48), False)
-        self.assertEqual(has_not_ideal(50), False)
+        self.assertEqual(has_ideal(4 ), False)
+        self.assertEqual(has_ideal(6 ), True )
+        self.assertEqual(has_ideal(8 ), True )
+        self.assertEqual(has_ideal(10), False)
+        self.assertEqual(has_ideal(12), True )
+        self.assertEqual(has_ideal(14), True )
+        self.assertEqual(has_ideal(16), False)
+        self.assertEqual(has_ideal(18), True )
+        self.assertEqual(has_ideal(20), True )
+        self.assertEqual(has_ideal(22), False)
+        self.assertEqual(has_ideal(24), True )
+        self.assertEqual(has_ideal(26), True )
+        self.assertEqual(has_ideal(28), False)
+        self.assertEqual(has_ideal(30), True )
+        self.assertEqual(has_ideal(32), True )
+        self.assertEqual(has_ideal(34), False)
+        self.assertEqual(has_ideal(36), True )
+        self.assertEqual(has_ideal(38), True )
+        self.assertEqual(has_ideal(40), False)
+        self.assertEqual(has_ideal(42), True )
+        self.assertEqual(has_ideal(44), True )
+        self.assertEqual(has_ideal(46), False)
+        self.assertEqual(has_ideal(48), True )
+        self.assertEqual(has_ideal(50), True )
 
 
 if __name__ == '__main__':

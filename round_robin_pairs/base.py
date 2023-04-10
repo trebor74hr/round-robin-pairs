@@ -466,7 +466,7 @@ class BestResult:
     score_ideal: JustScore = field(init=False, repr=True)
 
     def __post_init__(self):
-        self.has_ideal = not has_not_ideal(len(self.players))
+        self.has_ideal = has_ideal(len(self.players))
         self.score_ideal = len(self.players) * 1
 
     def is_ideal(self):
@@ -501,8 +501,8 @@ def _find_best_iteration(
 
     return selected
 
-def has_not_ideal(nr_of_players:int) -> bool:
-    return (nr_of_players - 4) % 6 == 0
+def has_ideal(nr_of_players:int) -> bool:
+    return (nr_of_players - 4) % 6 != 0
 
 def find_best_equalize_solution(
         round_robin_rounds: RoundRobnRounds, 
