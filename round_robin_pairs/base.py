@@ -29,7 +29,13 @@ from collections import OrderedDict
 from copy import deepcopy
 import enum
 import random
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+
+try:
+    # optional
+    import colorama 
+except ImportError:
+    colorama = None
 
 PlayerName = str
 RoundRobinRow = List[Tuple[PlayerName, PlayerName]]
@@ -41,17 +47,22 @@ FMT_WIDTH = 1
 def pp_players_row(players_row, fmt_width: int = FMT_WIDTH):
     return " ".join([f"{pl:>{fmt_width}}" for pl in players_row])
 
-def get_fmt_same_width(fmt_width: Optional[int] = None):
+def get_fmt_pair_same_width(fmt_width: Optional[int] = None):
     if not fmt_width:
         fmt_width = FMT_WIDTH
     return f"{{:>{fmt_width}}}-{{:>{fmt_width}}}" 
 
-def pp_player_pairs_row(player_pairs_row: RoundRobinRow, fmt_width: int = FMT_WIDTH) -> str:
-    fmt_same_width = get_fmt_same_width(fmt_width)
-    return " ".join([fmt_same_width.format(p1, p2) for pl1, pl2 in player_pairs_row])
+def get_fmt_pl_same_width(fmt_width: Optional[int] = None):
+    if not fmt_width:
+        fmt_width = FMT_WIDTH
+    return f"{{:>{fmt_width}}}"
 
-def round_robin_rounds_to_str_list(round_robin_rounds: RoundRobnRounds, fmt_width:int = FMT_WIDTH) -> List[str]:
-    fmt_same_width = get_fmt_same_width(fmt_width)
+def pp_player_pairs_row(player_pairs_row: RoundRobinRow, fmt_width: int = FMT_WIDTH) -> str:
+    fmt_same_width = get_fmt_pair_same_width(fmt_width)
+    return " ".join([fmt_same_width.format(pl1, pl2) for pl1, pl2 in player_pairs_row])
+
+def round_robin_rounds_to_str_list(round_robin_rounds: RoundRobnRounds, fmt_width:int = FMT_WIDTH, mark_players:Optional[PlayerName]=None) -> List[str]:
+    fmt_same_width = get_fmt_pair_same_width(fmt_width)
     output = []
     fmt_rd = f"{{:>{fmt_width}}}"
     sep = " " if fmt_width== 1 else "  "
@@ -62,15 +73,45 @@ def round_robin_rounds_to_str_list(round_robin_rounds: RoundRobnRounds, fmt_widt
         output.append(header)
         output.append("-" * len(header))
 
+    if colorama and mark_players:
+        all_colors = [
+                    [colorama.Back.BLUE], 
+                    [colorama.Fore.BLACK, colorama.Back.YELLOW], 
+                    [colorama.Fore.MAGENTA], 
+                    [colorama.Fore.GREEN], 
+                    [colorama.Fore.BLUE], 
+                    [colorama.Fore.RED],
+                    ]
+        # 'LIGHTBLACK_EX', 'LIGHTBLUE_EX', 'LIGHTCYAN_EX', 'LIGHTGREEN_EX', 'LIGHTMAGENTA_EX', 'LIGHTRED_EX', 
+        # 'LIGHTWHITE_EX', 'LIGHTYELLOW_EX', 'RED', 'RESET', 'WHITE', 
+        assert len(mark_players) <= len(all_colors)
+        player_colors = dict([(pl, all_colors[idx]) for idx, pl in enumerate(mark_players)])
+    else:
+        player_colors = {}
+
+
+    fmt_pl = get_fmt_pl_same_width(fmt_width)
+
     for rd, game_round in enumerate(round_robin_rounds, 1):
-        output.append("Round {}: {}".format(fmt_rd.format(rd), sep.join([fmt_same_width.format(p1, p2) for p1, p2 in game_round])))
+        pair_out = []
+        for p1, p2 in game_round:
+
+            p1_str, p2_str = fmt_pl.format(p1), fmt_pl.format(p2)
+            if colorama:
+                if p1 in player_colors:
+                    p1_str = "".join(player_colors[p1]) + p1_str + colorama.Style.RESET_ALL
+                if p2 in player_colors:
+                    p2_str = "".join(player_colors[p2]) + p2_str + colorama.Style.RESET_ALL
+            # fmt_same_width.format(p1, p2)
+            pair_out.append(f"{p1_str}-{p2_str}")
+        output.append("Round {}: {}".format(fmt_rd.format(rd), sep.join(pair_out)))
 
     if fmt_width>1:
         output.append("-" * len(header))
     return output
 
-def pprint_player_pairs_row(round_robin_rounds: RoundRobnRounds, fmt_width:int = FMT_WIDTH) -> None:
-    print("\n".join(round_robin_rounds_to_str_list(round_robin_rounds, fmt_width)))
+def pprint_player_pairs_row(round_robin_rounds: RoundRobnRounds, fmt_width:int = FMT_WIDTH, mark_players:Optional[PlayerName]=None) -> None:
+    print("\n".join(round_robin_rounds_to_str_list(round_robin_rounds, fmt_width=fmt_width, mark_players=mark_players)))
 
 def pprint_schedules(schedule_dict: Dict, players: List, nr_schedules:int):
     schedules = range(1, nr_schedules+1)
@@ -250,7 +291,8 @@ class EqualizeType(str, enum.Enum):
     DIAG_R2L = "DIAG_R2L"
     DIAG_R2L2R = "DIAG_R2L2R"
     DIAG_L2R2L = "DIAG_L2R2L"
-    RANDOM = "RANDOM"
+    BRUTE_FORCE = "BRUTE_FORCE"
+    CROSS = "CROSS"
 
     @classmethod
     def values(cls):
@@ -262,6 +304,7 @@ def equalize_schedules_in_rounds(
         eq_type: EqualizeType, 
         offset_x: int = 0,
         players: Optional[List[PlayerName]] = None, 
+        stats_only_rounds: Optional[RoundRobnRounds] = None,
         verbose:bool = False) -> Tuple[RoundRobnRounds, JustScore, JustScore]:
     " will try to accomplish that each player have nearly equal nr of schedules - to be as just as possible - returns score before and after " 
     # players if provided - only for correct order
@@ -270,10 +313,6 @@ def equalize_schedules_in_rounds(
     # check how just system is:
     #   - nearly equal times of schedule order 
     #   - nearly equal times of first in a pair
-
-    if verbose:
-        print("=== Rounds - before:")
-        pprint_player_pairs_row(round_robin_rounds, 2)
 
     players_detect: List[PlayerName] = []
     schedules: List[int] = []
@@ -293,6 +332,12 @@ def equalize_schedules_in_rounds(
     else:
         players = players_detect
 
+    mark_players=[players[-1], players[0], players[1]]
+    if verbose or stats_only_rounds:
+        print("=== Rounds - before:")
+        pprint_player_pairs_row(round_robin_rounds, fmt_width=2, mark_players=mark_players)
+
+
     nr_of_players = len(players)
     # TODO: consider: nr_schedules = nr_of_players // 2 + nr_of_players % 2
     nr_schedules = nr_of_players // 2
@@ -303,55 +348,83 @@ def equalize_schedules_in_rounds(
             get_just_score(players=players, 
                            nr_schedules=nr_schedules, 
                            round_robin_rounds=round_robin_rounds, 
-                           verbose=verbose)
-    if verbose:
-        print_unjust_schedules(schedule_dict)
+                           verbose=verbose or stats_only_rounds)
+    # if verbose:
+    #     print_unjust_schedules(schedule_dict)
 
-    round_robin_rounds = deepcopy(round_robin_rounds)
+    if stats_only_rounds:
+        round_robin_rounds = stats_only_rounds
+    else:
+        round_robin_rounds = deepcopy(round_robin_rounds)
 
-    nr_rounds = len(round_robin_rounds)
-    idx_fixed = 0
+        nr_rounds = len(round_robin_rounds)
+        idx_fixed = 0
 
-    if EqualizeType.RANDOM:
-        random.seed()
-        random_swaps = list(range(nr_schedules))
-        random_swaps = random.shuffle(random_swaps)
-
-    for rnr, round_pairs in enumerate(round_robin_rounds, 0):
-        # 1. the most simple method:
-        #    berger and cricle put fixed player in first schedule
-        #    this method swaps first pair based on round number
-        if eq_type==EqualizeType.RANDOM:
-            idx_other = random_swaps.pop(0)
-            print("random", idx_other)
-        elif eq_type==EqualizeType.DIAG_L2R:
-            idx_other = rnr % nr_schedules
-            # print(rnr, idx_other)
-        elif eq_type==EqualizeType.DIAG_R2L:
-            idx_other = -1 * ((rnr+1) % nr_schedules)
-        elif eq_type==EqualizeType.DIAG_L2R2L:
-            div = rnr // nr_schedules
-            if div % 2 == 0:
-                idx_other = rnr % nr_schedules
-            else:
-                idx_other = -1 * ((rnr+2) % nr_schedules)
-            # print(idx_other)
-        elif eq_type==EqualizeType.DIAG_R2L2R:
-            div = rnr // nr_schedules
-            if div % 2 == 0:
-                idx_other = -1 * ((rnr+1) % nr_schedules)
-            else:
-                idx_other = ((rnr+1) % nr_schedules)
+        if eq_type==EqualizeType.BRUTE_FORCE:
+            random.seed()
+            random_swaps = []
+            for rnr, round_pairs in enumerate(round_robin_rounds, 0):
+                # 1. the most simple method:
+                #    berger and cricle put fixed player in first schedule
+                #    this method swaps first pair based on round number
+                l2r = None
+                if not random_swaps:
+                    random_swaps = list(range(nr_schedules))
+                    random.shuffle(random_swaps)
+                    # print("random", rnr, random_swaps)
+                idx_other = random_swaps.pop(0)
+                # print("random", idx_other)
+                idxs_to_swap = [idx_fixed, idx_other]
+                # if verbose: print(rnr, div, idxs_to_swap)
+                swap(round_pairs, idxs_to_swap, verbose=verbose)
         else:
-            raise Exception(f"Unknown for {eq_type}. Select one of: {', '.join(EqualizeType.values())}")
+            for rnr, round_pairs in enumerate(round_robin_rounds, 0):
+                if eq_type==EqualizeType.CROSS:
+                    # div = rnr // nr_schedules
+                    if rnr % 2 ==0:
+                        l2r = True
+                        nr = rnr // 2
+                        idx_other = nr % nr_schedules
+                    else:
+                        l2r = False
+                        idx_other = -1 * ((nr+1) % nr_schedules)
+                    # print(rnr, idx_other)
+                elif eq_type==EqualizeType.DIAG_L2R:
+                    l2r = True
+                    idx_other = rnr % nr_schedules
+                    # print(rnr, idx_other)
+                elif eq_type==EqualizeType.DIAG_R2L:
+                    l2r = False
+                    idx_other = -1 * ((rnr+1) % nr_schedules)
+                elif eq_type==EqualizeType.DIAG_L2R2L:
+                    div = rnr // nr_schedules
+                    if div % 2 == 0:
+                        l2r = True
+                        idx_other = rnr % nr_schedules
+                    else:
+                        l2r = False
+                        idx_other = -1 * ((rnr+2) % nr_schedules)
+                    # print(idx_other)
+                elif eq_type==EqualizeType.DIAG_R2L2R:
+                    div = rnr // nr_schedules
+                    if div % 2 == 0:
+                        l2r = False
+                        idx_other = -1 * ((rnr+1) % nr_schedules)
+                    else:
+                        l2r = True
+                        idx_other = ((rnr+1) % nr_schedules)
+                else:
+                    raise Exception(f"Unknown for {eq_type}. Select one of: {', '.join(EqualizeType.values())}")
 
-        if offset_x:
-            idx_other = (idx_other + offset_x) % nr_schedules
+                if offset_x:
+                    idx_other = (idx_other + offset_x) 
+                    if abs(idx_other) >= nr_schedules:
+                        idx_other = ((idx_other + 0) % nr_schedules) * +1
 
-        idxs_to_swap = [idx_fixed, idx_other]
-        # if verbose: print(rnr, div, idxs_to_swap)
-
-        swap(round_pairs, idxs_to_swap, verbose=verbose)
+                idxs_to_swap = [idx_fixed, idx_other]
+                # if verbose: print(rnr, div, idxs_to_swap)
+                # print("---", rnr, idxs_to_swap)
+                swap(round_pairs, idxs_to_swap, verbose=verbose)
 
     # if verbose:
     #     first_nearly_equal = ((nr_of_players-1) // 2, (nr_of_players-1) // 2 +1)
@@ -363,18 +436,18 @@ def equalize_schedules_in_rounds(
             get_just_score(players=players, 
                            nr_schedules=nr_schedules, 
                            round_robin_rounds=round_robin_rounds, 
-                           verbose=verbose)
-    if verbose:
-        print("=== Schedule dict - after:")
-        print_unjust_schedules(schedule_dict)
+                           verbose=verbose or stats_only_rounds)
+    if verbose or stats_only_rounds:
+        # print("=== Schedule dict - after:")
+        # print_unjust_schedules(schedule_dict)
         print("=== Rounds - after:")
-        pprint_player_pairs_row(round_robin_rounds, 2)
+        pprint_player_pairs_row(round_robin_rounds, fmt_width=2, mark_players=mark_players)
 
         # best score
         # od 13 rundi, svaku igra 2x, osim jedne. svaki igrač onda ima po 1. za 14 igrača -> 14 x 1
-        score_best = len(players) * 1
+        score_ideal = len(players) * 1
         print(f"=== Score benefit: {score_before} => {score_after}, gain (- is good): {score_after - score_before}")
-        print(f"    Score to best / {score_best} (smaller the better, 0 is the best): {score_after - score_best}")
+        print(f"    Score to ideal solution => {score_ideal} (smaller the better, 0 is IDEAL): {score_after - score_ideal}")
 
 
     return round_robin_rounds, score_before, score_after
@@ -382,18 +455,27 @@ def equalize_schedules_in_rounds(
 
 @dataclass
 class BestResult:
+    players : List[PlayerName] = field(repr=False)
+    # nr_schedules : int = field(repr=False)
     best_score: Optional[JustScore] = None
     best_eq_type: Optional[EqualizeType] = None
     best_offset_x: Optional[int] = None
     score_before: Optional[JustScore] = None
-    best_rounds: Optional[RoundRobnRounds] = None
+    best_rounds: Optional[RoundRobnRounds] = field(repr=False, default=None)
+    score_ideal: JustScore = field(init=False, repr=True)
+
+    def __post_init__(self):
+        self.score_ideal = len(self.players) * 1
+
+    def is_ideal(self):
+        return self.best_score == self.score_ideal
 
 
 def _find_best_iteration(
     round_robin_rounds: RoundRobnRounds, 
     eq_type: EqualizeType,
-    offset_x: int,
     best_result: BestResult, # inout
+    offset_x: int = 0,
     players: Optional[List[PlayerName]] = None, 
     verbose:bool = False) -> bool:
 
@@ -411,22 +493,24 @@ def _find_best_iteration(
         selected = True
     else:
         selected = False
-    if verbose:
-        print(f"-- FIND: eq={eq_type:<10} + {offset_x:>2}, before={score_before:>3}, after={score_after:>3}, gain={score_after-score_before:>3}  {'*' if selected else ' '}")
+
+    if verbose and selected:
+        print(f"-- SELECTED: eq={eq_type:<10} + {offset_x:>2}, before={score_before:>3}, after={score_after:>3}, gain={score_after-score_before:>3}  {'*' if selected else ' '}")
+
     return selected
 
 
 def find_best_equalize_solution(
         round_robin_rounds: RoundRobnRounds, 
-        players: Optional[List[PlayerName]] = None, 
+        players: List[PlayerName],
+        brute_force_factor: Optional[int] = 1000,
         verbose:bool = False) -> BestResult:
 
     nr_schedules = len(round_robin_rounds[0])
 
-    best_result = BestResult()
+    best_result = BestResult(players=players)
 
-
-    for eq_type in ("DIAG_L2R", "DIAG_R2L", "DIAG_L2R2L", "DIAG_R2L2R",):
+    for eq_type in ("DIAG_L2R", "DIAG_R2L", "DIAG_L2R2L", "DIAG_R2L2R", "CROSS"):
         # for offset_x in range(0, nr_schedules):
         for offset_x in range(0, nr_schedules):
             _find_best_iteration(
@@ -438,11 +522,25 @@ def find_best_equalize_solution(
                 verbose = verbose,
                 )
 
-    # EqualizeType.RANDOM
+    if brute_force_factor:
+        for random_nr in range(0, nr_schedules * brute_force_factor):
+            selected = _find_best_iteration(
+                round_robin_rounds= round_robin_rounds,
+                eq_type = EqualizeType.BRUTE_FORCE,
+                best_result = best_result,
+                offset_x = 0,
+                players = players,
+                verbose = verbose,
+                )
 
     if verbose:
         # just to show verbose data
-        equalize_schedules_in_rounds(round_robin_rounds, eq_type=best_result.best_eq_type, offset_x=best_result.best_offset_x, players=players, verbose=True)
+        equalize_schedules_in_rounds(round_robin_rounds, stats_only_rounds=best_result.best_rounds, 
+                                     eq_type=best_result.best_eq_type, offset_x=best_result.best_offset_x, players=players)
+
+        print("=" * 80)
+        print(f"{('__IDEAL__' if best_result.is_ideal() else 'ACCEPT') if best_result.score_before > best_result.best_score else 'TO-REJECT'} {best_result}")
+        print("=" * 80)
 
     return best_result
 

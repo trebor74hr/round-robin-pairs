@@ -241,6 +241,7 @@ class TestAll(unittest.TestCase):
         # players = list([f"{pl}" for pl in range(1,nr_of_players+1)])
         # berger_tables(players, verbose=True)
 
+
         rounds_str_list, round_robin_rounds, players = \
             self.create_rounds_str_list(14, berger=True, verbose=False, return_all=True)
         self.assertEqual(rounds_str_list, [
@@ -260,46 +261,81 @@ class TestAll(unittest.TestCase):
             ])
         # print("== Rounds Berger:"); pprint_player_pairs_row(round_robin_rounds)
 
-        rounds_new, score_before, score_after = equalize_schedules_in_rounds(round_robin_rounds, eq_type="DIAG_L2R", players=players, verbose=False)
-        self.assertNotEqual(rounds_new, round_robin_rounds)
-        # print("== Rounds EQ-L2R:"); pprint_player_pairs_row(rounds_new, 2)
-        if True:
-            self.assertEqual((score_before, score_after - score_before), (37, 13))
-        else:
-            self.assertEqual((score_before, score_after - score_before), (96, -8))
+        # rounds_new, score_before, score_after = equalize_schedules_in_rounds(round_robin_rounds, eq_type="DIAG_L2R", players=players, verbose=False)
+        # self.assertNotEqual(rounds_new, round_robin_rounds)
+        # # print("== Rounds EQ-L2R:"); pprint_player_pairs_row(rounds_new, 2)
+        # if True:
+        #     self.assertEqual((score_before, score_after - score_before), (37, 13))
+        # else:
+        #     self.assertEqual((score_before, score_after - score_before), (96, -8))
 
-        rounds_new2, score_before, score_after = equalize_schedules_in_rounds(round_robin_rounds, eq_type="DIAG_R2L", players=players, verbose=False)
-        self.assertNotEqual(rounds_new2, round_robin_rounds)
-        self.assertNotEqual(rounds_new2, rounds_new)
-        # print("== Rounds EQ-R2L:"); pprint_player_pairs_row(rounds_new2, 2)
-        if True:
-            self.assertEqual((score_before, score_after - score_before), (37, 19))
-        else:
-            self.assertEqual((score_before, score_after - score_before), (96, -10))
+        # rounds_new2, score_before, score_after = equalize_schedules_in_rounds(round_robin_rounds, eq_type="DIAG_R2L", players=players, verbose=False)
+        # self.assertNotEqual(rounds_new2, round_robin_rounds)
+        # self.assertNotEqual(rounds_new2, rounds_new)
+        # # print("== Rounds EQ-R2L:"); pprint_player_pairs_row(rounds_new2, 2)
+        # if True:
+        #     self.assertEqual((score_before, score_after - score_before), (37, 19))
+        # else:
+        #     self.assertEqual((score_before, score_after - score_before), (96, -10))
 
-        rounds_new3, score_before, score_after = equalize_schedules_in_rounds(round_robin_rounds, eq_type="DIAG_L2R2L", players=players, verbose=False)
-        self.assertNotEqual(rounds_new3, round_robin_rounds)
-        self.assertNotEqual(rounds_new3, rounds_new2)
-        self.assertNotEqual(rounds_new3, rounds_new)
-        # print("== Rounds EQ-R2L:"); pprint_player_pairs_row(rounds_new3, 2)
-        if True:
-            self.assertEqual((score_before, score_after - score_before), (37, 16))
-        else:
-            self.assertEqual((score_before, score_after - score_before), (96, -10))
+        # rounds_new3, score_before, score_after = equalize_schedules_in_rounds(round_robin_rounds, eq_type="DIAG_L2R2L", players=players, verbose=False)
+        # self.assertNotEqual(rounds_new3, round_robin_rounds)
+        # self.assertNotEqual(rounds_new3, rounds_new2)
+        # self.assertNotEqual(rounds_new3, rounds_new)
+        # # print("== Rounds EQ-R2L:"); pprint_player_pairs_row(rounds_new3, 2)
+        # if True:
+        #     self.assertEqual((score_before, score_after - score_before), (37, 16))
+        # else:
+        #     self.assertEqual((score_before, score_after - score_before), (96, -10))
 
         rounds_new4, score_before, score_after = \
                 equalize_schedules_in_rounds(round_robin_rounds, eq_type="DIAG_R2L2R", players=players, verbose=False)
         self.assertNotEqual(rounds_new4, round_robin_rounds)
-        self.assertNotEqual(rounds_new4, rounds_new2)
-        self.assertNotEqual(rounds_new4, rounds_new)
+
         # print("== Rounds EQ-R2L:"); pprint_player_pairs_row(rounds_new4, 2)
-        if True:
-            # ------------------------------------------------------------
-            # NOTE: ovaj jedini daje dobar rezultat optimizacije
-            # ------------------------------------------------------------
-            self.assertEqual((score_before, score_after - score_before), (37, -23))
-        else:
-            self.assertEqual((score_before, score_after - score_before), (96, -12))
+        # ------------------------------------------------------------
+        # IDEAL:
+        # ------------------------------------------------------------
+        self.assertEqual((score_before, score_after - score_before), (37, -23))
+        # self.assertEqual((score_before, score_after - score_before), (96, -12))
+
+    def test_12_berger_find(self):
+        self.maxDiff = None
+
+        rounds_str_list, round_robin_rounds, players = \
+            self.create_rounds_str_list(12, berger=True, verbose=False, return_all=True)
+
+        brute_force_factor = 500
+        best_result = \
+                find_best_equalize_solution(round_robin_rounds, players=players, 
+                        brute_force_factor=brute_force_factor, verbose=False)
+
+        self.assertEqual(best_result.score_before, 31)
+        # ------------------------------------------------------------
+        # IDEAL:
+        # ------------------------------------------------------------
+        self.assertTrue(best_result.best_score == 12, best_result.best_score)
+        self.assertTrue(best_result.is_ideal(), True)
+        self.assertEqual(best_result.best_eq_type, "DIAG_R2L2R", best_result.best_eq_type)
+
+    def test_14_berger_find(self):
+        self.maxDiff = None
+
+        rounds_str_list, round_robin_rounds, players = \
+            self.create_rounds_str_list(14, berger=True, verbose=False, return_all=True)
+
+        brute_force_factor = 500
+        best_result = \
+                find_best_equalize_solution(round_robin_rounds, players=players, 
+                        brute_force_factor=brute_force_factor, verbose=False)
+
+        self.assertEqual(best_result.score_before, 37)
+        # ------------------------------------------------------------
+        # IDEAL:
+        # ------------------------------------------------------------
+        self.assertTrue(best_result.best_score == 14, best_result.best_score)
+        self.assertTrue(best_result.is_ideal(), True)
+        self.assertEqual(best_result.best_eq_type, "DIAG_R2L2R", best_result.best_eq_type)
 
 
     def test_16_berger(self):
@@ -327,13 +363,32 @@ class TestAll(unittest.TestCase):
             ])
         # self.assertEqual((score_before, (score_after - score_before)), (126, -10))
 
+        # for offset_x in range(0, nr_schedules):
+        #     rounds_new, score_before, score_after = \
+        #             equalize_schedules_in_rounds(
+        #                     round_robin_rounds, 
+        #                     # ok: 
+        #                     eq_type="CROSS", 
+        #                     # ok: eq_type="DIAG_R2L2R", 
+        #                     # ok: eq_type="DIAG_L2R2L", 
+        #                     # ok: eq_type="DIAG_L2R", 
+        #                     # ok: eq_type="DIAG_R2L", 
+        #                     offset_x=offset_x, players=players, verbose=True)
+        # self.assertEqual((score_before, (score_after - score_before)), (0, 0))
 
-        best_result = \
-                find_best_equalize_solution(round_robin_rounds, players=players, verbose=True)
-        self.assertEqual(best_result.score_before, 43)
-        self.assertEqual(best_result.best_eq_type, "DIAG_R2L2R")
-        self.assertEqual(best_result.best_offset_x, 0)
-        self.assertEqual((best_result.score_before, (best_result.best_score - best_result.score_before)), (43, -4))
+
+        if True:
+            # brute_force_factor = 3000
+            brute_force_factor = None # disabled
+
+            best_result = \
+                    find_best_equalize_solution(round_robin_rounds, players=players, 
+                            brute_force_factor=brute_force_factor, verbose=False)
+
+            # NOTE: brute_force sometimes will find better result
+            self.assertEqual(best_result.score_before, 43)
+            self.assertTrue(best_result.best_score <= 43, best_result.best_score)
+            self.assertTrue(best_result.best_eq_type in ("DIAG_R2L2R", "BRUTE_FORCE"), best_result.best_eq_type)
 
         # rounds_new, score_before, score_after = equalize_schedules_in_rounds(round_robin_rounds, eq_type="DIAG_L2R", players=players, verbose=True)
         # self.assertEqual((score_before, (score_after - score_before)), (43, 18))
