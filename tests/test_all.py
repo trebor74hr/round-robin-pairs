@@ -328,12 +328,12 @@ class TestAll(unittest.TestCase):
         # self.assertEqual((score_before, (score_after - score_before)), (126, -10))
 
 
-        rounds_new, score_before, best_score, best_eq_type, best_offset_x = \
-                find_best_equalize_solution(round_robin_rounds, players=players, verbose=False)
-        self.assertEqual(score_before, 43)
-        self.assertEqual(best_eq_type, "DIAG_R2L2R")
-        self.assertEqual(best_offset_x, 0)
-        self.assertEqual((score_before, (best_score - score_before)), (43, -4))
+        best_result = \
+                find_best_equalize_solution(round_robin_rounds, players=players, verbose=True)
+        self.assertEqual(best_result.score_before, 43)
+        self.assertEqual(best_result.best_eq_type, "DIAG_R2L2R")
+        self.assertEqual(best_result.best_offset_x, 0)
+        self.assertEqual((best_result.score_before, (best_result.best_score - best_result.score_before)), (43, -4))
 
         # rounds_new, score_before, score_after = equalize_schedules_in_rounds(round_robin_rounds, eq_type="DIAG_L2R", players=players, verbose=True)
         # self.assertEqual((score_before, (score_after - score_before)), (43, 18))

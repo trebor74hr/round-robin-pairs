@@ -28,6 +28,8 @@ from pprint import pprint
 from collections import OrderedDict
 from copy import deepcopy
 import enum
+import random
+from dataclasses import dataclass
 
 PlayerName = str
 RoundRobinRow = List[Tuple[PlayerName, PlayerName]]
@@ -248,6 +250,7 @@ class EqualizeType(str, enum.Enum):
     DIAG_R2L = "DIAG_R2L"
     DIAG_R2L2R = "DIAG_R2L2R"
     DIAG_L2R2L = "DIAG_L2R2L"
+    RANDOM = "RANDOM"
 
     @classmethod
     def values(cls):
@@ -308,11 +311,20 @@ def equalize_schedules_in_rounds(
 
     nr_rounds = len(round_robin_rounds)
     idx_fixed = 0
+
+    if EqualizeType.RANDOM:
+        random.seed()
+        random_swaps = list(range(nr_schedules))
+        random_swaps = random.shuffle(random_swaps)
+
     for rnr, round_pairs in enumerate(round_robin_rounds, 0):
         # 1. the most simple method:
         #    berger and cricle put fixed player in first schedule
         #    this method swaps first pair based on round number
-        if eq_type==EqualizeType.DIAG_L2R:
+        if eq_type==EqualizeType.RANDOM:
+            idx_other = random_swaps.pop(0)
+            print("random", idx_other)
+        elif eq_type==EqualizeType.DIAG_L2R:
             idx_other = rnr % nr_schedules
             # print(rnr, idx_other)
         elif eq_type==EqualizeType.DIAG_R2L:
@@ -368,43 +380,71 @@ def equalize_schedules_in_rounds(
     return round_robin_rounds, score_before, score_after
 
 
+@dataclass
+class BestResult:
+    best_score: Optional[JustScore] = None
+    best_eq_type: Optional[EqualizeType] = None
+    best_offset_x: Optional[int] = None
+    score_before: Optional[JustScore] = None
+    best_rounds: Optional[RoundRobnRounds] = None
+
+
+def _find_best_iteration(
+    round_robin_rounds: RoundRobnRounds, 
+    eq_type: EqualizeType,
+    offset_x: int,
+    best_result: BestResult, # inout
+    players: Optional[List[PlayerName]] = None, 
+    verbose:bool = False) -> bool:
+
+    rounds_new, score_before, score_after = equalize_schedules_in_rounds(round_robin_rounds, eq_type=eq_type, offset_x=offset_x, players=players, verbose=False)
+    if best_result.score_before is None:
+        best_result.score_before = score_before
+    else:
+        assert best_result.score_before == score_before
+
+    if best_result.best_score is None or score_after < best_result.best_score:
+        best_result.best_score = score_after 
+        best_result.best_eq_type = eq_type
+        best_result.best_offset_x = offset_x
+        best_result.best_rounds = rounds_new
+        selected = True
+    else:
+        selected = False
+    if verbose:
+        print(f"-- FIND: eq={eq_type:<10} + {offset_x:>2}, before={score_before:>3}, after={score_after:>3}, gain={score_after-score_before:>3}  {'*' if selected else ' '}")
+    return selected
+
+
 def find_best_equalize_solution(
         round_robin_rounds: RoundRobnRounds, 
         players: Optional[List[PlayerName]] = None, 
-        verbose:bool = False) -> Tuple[RoundRobnRounds, JustScore, JustScore, int, int]:
+        verbose:bool = False) -> BestResult:
 
     nr_schedules = len(round_robin_rounds[0])
-    best_score = None
-    best_eq_type = None
-    best_offset_x = None
-    fixed_score_before = None
-    best_rounds = None
+
+    best_result = BestResult()
+
 
     for eq_type in ("DIAG_L2R", "DIAG_R2L", "DIAG_L2R2L", "DIAG_R2L2R",):
         # for offset_x in range(0, nr_schedules):
         for offset_x in range(0, nr_schedules):
-            rounds_new, score_before, score_after = equalize_schedules_in_rounds(round_robin_rounds, eq_type=eq_type, offset_x=offset_x, players=players, verbose=False)
-            if fixed_score_before is None:
-                fixed_score_before = score_before
-            else:
-                assert fixed_score_before == score_before
+            _find_best_iteration(
+                round_robin_rounds= round_robin_rounds,
+                eq_type = eq_type,
+                offset_x = offset_x,
+                best_result = best_result,
+                players = players,
+                verbose = verbose,
+                )
 
-            if best_score is None or score_after < best_score:
-                best_score = score_after 
-                best_eq_type = eq_type
-                best_offset_x = offset_x
-                best_rounds = rounds_new
-                selected = True
-            else:
-                selected = False
-            if verbose:
-                print(f"-- FIND: eq={eq_type:<10} + {offset_x:>2}, before={score_before:>3}, after={score_after:>3}, gain={score_after-score_before:>3}  {'*' if selected else ' '}")
+    # EqualizeType.RANDOM
 
     if verbose:
         # just to show verbose data
-        equalize_schedules_in_rounds(round_robin_rounds, eq_type=best_eq_type, offset_x=best_offset_x, players=players, verbose=True)
+        equalize_schedules_in_rounds(round_robin_rounds, eq_type=best_result.best_eq_type, offset_x=best_result.best_offset_x, players=players, verbose=True)
 
-    return best_rounds, fixed_score_before, best_score, best_eq_type, best_offset_x
+    return best_result
 
 
 
