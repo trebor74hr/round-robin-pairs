@@ -1,3 +1,35 @@
+Contents
+=========
+    - TODO
+    - ANALYSIS
+
+TODO:
+=====
+    - !! zapiši u readme što može i što ne
+        - svi neparni su riješeni s berger - u prvoj koloni je BYE 
+        - parni 6,8,12,14,18,20 ... su riješeni s okrenutim-V
+        - jedino ostaju 10,16,22,28 ... nisu riješeni
+
+    - popiši u readme sve tablice 
+        - berger, 
+        - circle 
+        - linkovi, 
+        - berger optimirani (+ okrenutim-V) - eventualno rezultati first/sch-by-players
+
+    - ubrzaj equalize - inicijalno pretraživanje player-a i schedules - preskoči ako ih već imaš
+
+    - rename brute_force -> random_search
+
+    - na primjeru 10 napravi novo - brute_force - ide redom i isprobava sve kombinacije - želim vidjeti je li uopće postoji idealno rješenje
+      ako postoji - probaj složiti za 16, 22, 28, ++ i ostale
+
+    - simmulated annealing ...
+
+    - solver / liear programming / mixed integer programming / constrained mixed integer programming ??
+
+ANALYSIS:
+=========
+
 RL 230405 
     **onaj fiksni bi se mogao samo ugurati redom - prvo kolo - igra prvi
     drugo igra drug ... samo move s prvog mjesta na ovo prema kolu**
