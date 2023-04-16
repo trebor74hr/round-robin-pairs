@@ -61,12 +61,17 @@ class TestAll(unittest.TestCase):
     """
 
     def create_rounds_str_list(self, nr_of_players:int, berger:bool, 
+                               ideal:bool=False,
                                verbose:bool = False, return_all:bool = False, 
                                fmt_width:int=FMT_WIDTH):
         players = list([f"{pl:>0{fmt_width}d}" for pl in range(1,nr_of_players+1)])
         # print(players)
         function = berger_tables if berger else circle_tables
-        round_robin_rounds = function(players, verbose=verbose)
+        kwargs = {}
+        if ideal:
+            kwargs["ideal"] = ideal
+
+        round_robin_rounds = function(players, verbose=verbose, **kwargs)
 
         expected = set([tuple(sorted(pair)) for pair in combinations(players, 2)])
         got = [tuple(sorted(pair)) for row in round_robin_rounds for pair in row]
@@ -216,6 +221,18 @@ class TestAll(unittest.TestCase):
         self.assertEqual((score_before, (score_after - score_before)), (13, -1))
         # self.assertEqual((score_before, (score_after - score_before)), (16, -4))
 
+
+    def test_6_berger_ideal(self):
+        rounds_str_list, round_robin_rounds, players = \
+            self.create_rounds_str_list(6, berger=True, ideal=True, verbose=False, return_all=True)
+        self.assertEqual(rounds_str_list, [
+            'Round 1: 3-4 2-5 1-6',
+            'Round 2: 5-3 6-4 1-2',
+            'Round 3: 2-6 3-1 4-5',
+            'Round 4: 1-4 6-5 2-3',
+            'Round 5: 5-1 4-2 3-6',
+            ])
+
     def test_6_berger_has_ideal(self):
         self.maxDiff = None
 
@@ -236,16 +253,13 @@ class TestAll(unittest.TestCase):
         self.assertEqual(best_result.is_ideal(), True)
         self.assertEqual(best_result.best_eq_type, "DIAG_R2L2R", best_result.best_eq_type)
 
-        rounds_str_list = round_robin_rounds_to_str_list(best_result.best_rounds, fmt_width=2)
+        rounds_str_list = round_robin_rounds_to_str_list(best_result.best_rounds, fmt_width=1)
         self.assertEqual(rounds_str_list, [
-            'Round         1      2      3',
-            '-----------------------------',
-            'Round  1:  3- 4   2- 5   1- 6',
-            'Round  2:  5- 3   6- 4   1- 2',
-            'Round  3:  2- 6   3- 1   4- 5',
-            'Round  4:  1- 4   6- 5   2- 3',
-            'Round  5:  5- 1   4- 2   3- 6',
-            '-----------------------------',
+            'Round 1: 3-4 2-5 1-6',
+            'Round 2: 5-3 6-4 1-2',
+            'Round 3: 2-6 3-1 4-5',
+            'Round 4: 1-4 6-5 2-3',
+            'Round 5: 5-1 4-2 3-6',
             ])
 
 
@@ -276,6 +290,19 @@ class TestAll(unittest.TestCase):
         self.assertEqual((score_before, (score_after - score_before)), (19, 1))
         # self.assertEqual((score_before, (score_after - score_before)), (30, -2))
 
+    def test_8_berger_ideal(self):
+        rounds_str_list, round_robin_rounds, players = \
+            self.create_rounds_str_list(8, berger=True, ideal=True, verbose=False, return_all=True)
+        self.assertEqual(rounds_str_list, [
+            'Round 1: 4-5 2-7 3-6 1-8',
+            'Round 2: 7-3 6-4 8-5 1-2',
+            'Round 3: 3-1 2-8 4-7 5-6',
+            'Round 4: 8-6 7-5 1-4 2-3',
+            'Round 5: 4-2 3-8 5-1 6-7',
+            'Round 6: 2-5 1-6 8-7 3-4',
+            'Round 7: 7-1 5-3 6-2 4-8',
+            ])
+
     def test_8_berger_has_ideal(self):
         self.maxDiff = None
 
@@ -295,6 +322,17 @@ class TestAll(unittest.TestCase):
         self.assertEqual(best_result.is_ideal(), True)
         self.assertEqual(best_result.best_eq_type, "DIAG_R2L2R", best_result.best_eq_type)
 
+        rounds_str_list = round_robin_rounds_to_str_list(best_result.best_rounds, fmt_width=1)
+        self.assertEqual(rounds_str_list, [
+            'Round 1: 4-5 2-7 3-6 1-8',
+            'Round 2: 7-3 6-4 8-5 1-2',
+            'Round 3: 3-1 2-8 4-7 5-6',
+            'Round 4: 8-6 7-5 1-4 2-3',
+            'Round 5: 4-2 3-8 5-1 6-7',
+            'Round 6: 2-5 1-6 8-7 3-4',
+            'Round 7: 7-1 5-3 6-2 4-8',
+            ])
+
     def test_10_berger(self):
         rounds_str_list, round_robin_rounds, players = \
             self.create_rounds_str_list(10, berger=True, verbose=False, return_all=True)
@@ -312,6 +350,13 @@ class TestAll(unittest.TestCase):
         rounds_new, score_before, score_after = equalize_schedules_in_rounds(round_robin_rounds, eq_type="DIAG_L2R", verbose=False)
         self.assertEqual((score_before, (score_after - score_before)), (25, 6))
         # self.assertEqual((score_before, (score_after - score_before)), (40, -4))
+
+
+    def test_10_berger_has_not_ideal(self):
+        with self.assertRaisesRegex(ValueError,
+                f"Ideal result not available for 10 number of players. Ideal available for: .. 8, 9, 11, 12 .."):
+            self.create_rounds_str_list(10, berger=True, ideal=True, verbose=False, return_all=True)
+
 
     def test_10_berger_find(self):
         self.maxDiff = None
@@ -350,6 +395,23 @@ class TestAll(unittest.TestCase):
         rounds_new, score_before, score_after = equalize_schedules_in_rounds(round_robin_rounds, eq_type="DIAG_L2R", verbose=False)
         self.assertEqual((score_before, (score_after - score_before)), (31, 11))
         # self.assertEqual((score_before, (score_after - score_before)), (70, -8))
+
+    def test_12_berger_ideal(self):
+        rounds_str_list, round_robin_rounds, players = \
+            self.create_rounds_str_list(12, berger=True, ideal=True, verbose=False, return_all=True)
+        self.assertEqual(rounds_str_list, [
+            'Round 1: 6-7 2-11 3-10 4-9 5-8 1-12',
+            'Round 2: 11-3 8-6 9-5 10-4 12-7 1-2',
+            'Round 3: 5-10 3-1 4-11 2-12 6-9 7-8',
+            'Round 4: 10-6 9-7 12-8 11-5 1-4 2-3',
+            'Round 5: 4-2 3-12 5-1 6-11 7-10 8-9',
+            'Round 6: 12-9 10-8 11-7 1-6 2-5 3-4',
+            'Round 7: 5-3 4-12 6-2 7-1 8-11 9-10',
+            'Round 8: 1-8 11-9 12-10 2-7 3-6 4-5',
+            'Round 9: 8-2 6-4 7-3 5-12 9-1 10-11',
+            'Round 10: 4-7 1-10 2-9 3-8 12-11 5-6',
+            'Round 11: 11-1 7-5 8-4 9-3 10-2 6-12',
+            ])
 
     def test_12_berger_has_ideal(self):
         self.maxDiff = None
@@ -428,6 +490,25 @@ class TestAll(unittest.TestCase):
         # ------------------------------------------------------------
         self.assertEqual((score_before, score_after - score_before), (37, -23))
         # self.assertEqual((score_before, score_after - score_before), (96, -12))
+
+    def test_14_berger_ideal(self):
+        rounds_str_list, round_robin_rounds, players = \
+            self.create_rounds_str_list(14, berger=True, ideal=True, verbose=False, return_all=True)
+        self.assertEqual(rounds_str_list, [
+            'Round 1: 7-8 2-13 3-12 4-11 5-10 6-9 1-14',
+            'Round 2: 13-3 9-7 10-6 11-5 12-4 14-8 1-2',
+            'Round 3: 6-11 3-1 4-13 5-12 2-14 7-10 8-9',
+            'Round 4: 12-6 10-8 11-7 14-9 13-5 1-4 2-3',
+            'Round 5: 5-1 4-2 3-14 6-13 7-12 8-11 9-10',
+            'Round 6: 11-9 14-10 12-8 13-7 1-6 2-5 3-4',
+            'Round 7: 4-14 5-3 6-2 7-1 8-13 9-12 10-11',
+            'Round 8: 12-10 14-11 13-9 1-8 2-7 3-6 4-5',
+            'Round 9: 7-3 6-4 5-14 8-2 9-1 10-13 11-12',
+            'Round 10: 2-9 13-11 1-10 14-12 3-8 4-7 5-6',
+            'Round 11: 10-2 7-5 8-4 9-3 6-14 11-1 12-13',
+            'Round 12: 5-8 1-12 2-11 3-10 4-9 14-13 6-7',
+            'Round 13: 13-1 8-6 9-5 10-4 11-3 12-2 7-14',
+            ])
 
 
     def test_14_berger_has_ideal(self):
@@ -514,6 +595,12 @@ class TestAll(unittest.TestCase):
         #                     offset_x=offset_x, players=players, verbose=True)
         # self.assertEqual((score_before, (score_after - score_before)), (0, 0))
 
+    def test_16_berger_has_not_ideal(self):
+        with self.assertRaisesRegex(ValueError,
+                f"Ideal result not available for 16 number of players. Ideal available for: .. 14, 15, 17, 18 .."):
+            self.create_rounds_str_list(16, berger=True, ideal=True, verbose=False, return_all=True)
+
+
     def test_16_berger_find(self):
         self.maxDiff = None
         nr_of_players = 16
@@ -542,6 +629,30 @@ class TestAll(unittest.TestCase):
         # rounds_new, score_before, score_after = equalize_schedules_in_rounds(round_robin_rounds, eq_type="DIAG_R2L2R", players=players, verbose=True)
         # self.assertEqual((score_before, (score_after - score_before)), (43, -4))
 
+    def test_18_berger_ideal(self):
+        self.maxDiff = None
+        rounds_str_list, round_robin_rounds, players = \
+            self.create_rounds_str_list(18, berger=True, ideal=True, verbose=False, return_all=True)
+        self.assertEqual(rounds_str_list, [
+            'Round 1: 9-10 2-17 3-16 4-15 5-14 6-13 7-12 8-11 1-18',
+            'Round 2: 17-3 11-9 12-8 13-7 14-6 15-5 16-4 18-10 1-2',
+            'Round 3: 8-13 3-1 4-17 5-16 6-15 7-14 2-18 9-12 10-11',
+            'Round 4: 16-6 12-10 13-9 14-8 15-7 18-11 17-5 1-4 2-3',
+            'Round 5: 7-16 4-2 5-1 6-17 3-18 8-15 9-14 10-13 11-12',
+            'Round 6: 15-9 13-11 14-10 18-12 16-8 17-7 1-6 2-5 3-4',
+            'Round 7: 6-2 5-3 4-18 7-1 8-17 9-16 10-15 11-14 12-13',
+            'Round 8: 14-12 18-13 15-11 16-10 17-9 1-8 2-7 3-6 4-5',
+            'Round 9: 5-18 6-4 7-3 8-2 9-1 10-17 11-16 12-15 13-14',
+            'Round 10: 15-13 18-14 16-12 17-11 1-10 2-9 3-8 4-7 5-6',
+            'Round 11: 8-4 7-5 6-18 9-3 10-2 11-1 12-17 13-16 14-15',
+            'Round 12: 1-12 16-14 17-13 18-15 2-11 3-10 4-9 5-8 6-7',
+            'Round 13: 11-3 8-6 9-5 10-4 7-18 12-2 13-1 14-17 15-16',
+            'Round 14: 4-11 17-15 1-14 2-13 3-12 18-16 5-10 6-9 7-8',
+            'Round 15: 14-2 9-7 10-6 11-5 12-4 13-3 8-18 15-1 16-17',
+            'Round 16: 7-10 1-16 2-15 3-14 4-13 5-12 6-11 18-17 8-9',
+            'Round 17: 17-1 10-8 11-7 12-6 13-5 14-4 15-3 16-2 9-18',
+            ])
+
     def test_18_berger_has_ideal(self):
         self.maxDiff = None
         nr_of_players = 18
@@ -562,6 +673,32 @@ class TestAll(unittest.TestCase):
         self.assertEqual(best_result.best_score, 18, best_result.best_score)
         self.assertEqual(best_result.is_ideal(), True)
         self.assertEqual(best_result.best_eq_type, "DIAG_R2L2R", best_result.best_eq_type)
+
+    def test_20_berger_ideal(self):
+        self.maxDiff = None
+        rounds_str_list, round_robin_rounds, players = \
+            self.create_rounds_str_list(20, berger=True, ideal=True, verbose=False, return_all=True)
+        self.assertEqual(rounds_str_list, [
+            'Round 1: 10-11 2-19 3-18 4-17 5-16 6-15 7-14 8-13 9-12 1-20',
+            'Round 2: 19-3 12-10 13-9 14-8 15-7 16-6 17-5 18-4 20-11 1-2',
+            'Round 3: 9-14 3-1 4-19 5-18 6-17 7-16 8-15 2-20 10-13 11-12',
+            'Round 4: 18-6 13-11 14-10 15-9 16-8 17-7 20-12 19-5 1-4 2-3',
+            'Round 5: 8-17 4-2 5-1 6-19 7-18 3-20 9-16 10-15 11-14 12-13',
+            'Round 6: 17-9 14-12 15-11 16-10 20-13 18-8 19-7 1-6 2-5 3-4',
+            'Round 7: 7-1 5-3 6-2 4-20 8-19 9-18 10-17 11-16 12-15 13-14',
+            'Round 8: 16-12 15-13 20-14 17-11 18-10 19-9 1-8 2-7 3-6 4-5',
+            'Round 9: 6-4 5-20 7-3 8-2 9-1 10-19 11-18 12-17 13-16 14-15',
+            'Round 10: 20-15 16-14 17-13 18-12 19-11 1-10 2-9 3-8 4-7 5-6',
+            'Round 11: 7-5 6-20 8-4 9-3 10-2 11-1 12-19 13-18 14-17 15-16',
+            'Round 12: 18-14 17-15 20-16 19-13 1-12 2-11 3-10 4-9 5-8 6-7',
+            'Round 13: 10-4 8-6 9-5 7-20 11-3 12-2 13-1 14-19 15-18 16-17',
+            'Round 14: 2-13 18-16 19-15 1-14 20-17 3-12 4-11 5-10 6-9 7-8',
+            'Round 15: 13-3 9-7 10-6 11-5 12-4 8-20 14-2 15-1 16-19 17-18',
+            'Round 16: 5-12 19-17 1-16 2-15 3-14 4-13 20-18 6-11 7-10 8-9',
+            'Round 17: 16-2 10-8 11-7 12-6 13-5 14-4 15-3 9-20 17-1 18-19',
+            'Round 18: 8-11 1-18 2-17 3-16 4-15 5-14 6-13 7-12 20-19 9-10',
+            'Round 19: 19-1 11-9 12-8 13-7 14-6 15-5 16-4 17-3 18-2 10-20',
+            ])
 
 
     def test_20_berger_has_ideal(self):
@@ -584,6 +721,11 @@ class TestAll(unittest.TestCase):
         self.assertEqual(best_result.best_score, 20, best_result.best_score)
         self.assertEqual(best_result.is_ideal(), True)
         self.assertEqual(best_result.best_eq_type, "DIAG_R2L2R", best_result.best_eq_type)
+
+    def test_22_berger_has_not_ideal(self):
+        with self.assertRaisesRegex(ValueError,
+                f"Ideal result not available for 22 number of players. Ideal available for: .. 20, 21, 23, 24 .."):
+            self.create_rounds_str_list(22, berger=True, ideal=True, verbose=False, return_all=True)
 
     def test_22_plus_berger_find(self):
         self.maxDiff = None
@@ -629,7 +771,7 @@ class TestAll(unittest.TestCase):
                 self.assertIn(best_result.best_eq_type, ("brute_force", "DIAG_R2L2R"), best_result.best_eq_type)
 
 
-    def test_has_not_ideal(self):
+    def test_has_ideal_or_not(self):
         self.assertEqual(has_ideal(4 ), False)
         self.assertEqual(has_ideal(6 ), True )
         self.assertEqual(has_ideal(8 ), True )

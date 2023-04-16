@@ -21,6 +21,9 @@ Functions have:
 Unit testing based on examples in:
     https://handbook.fide.com/chapter/C05Annex1
 
+TODO: functions equalize_schedules_in_rounds() and find_best_equalize_solution()
+      should be reorganized and renamed ...
+
 """
 
 from typing import List, Tuple, Dict, Optional
@@ -130,9 +133,16 @@ def pprint_schedules(schedule_dict: Dict, players: List, nr_schedules:int):
             out.append("{:>2}{}".format(cnt, mark))
         print(f"{pl:<2}. {' '.join(out)}")
 
+def has_ideal(nr_of_players:int) -> bool:
+    return (nr_of_players - 4) % 6 != 0
 
 # https://en.wikipedia.org/wiki/Round-robin_tournament
-def berger_tables(players: List[PlayerName], verbose:bool = False) -> RoundRobnRounds:
+def berger_tables(players: List[PlayerName], ideal:bool=False, verbose:bool = False) -> RoundRobnRounds:
+    nr_players = len(players)
+    if ideal and not has_ideal(nr_players):
+        has_ideal_nrs = [str(nr) for nr in range(nr_players-2, nr_players+3) if has_ideal(nr)]
+        raise ValueError(f"Ideal result not available for {nr_players} number of players. Ideal available for: .. {', '.join(has_ideal_nrs)} ..")
+
     n = len(players)
     if verbose:
         print(players)
@@ -168,6 +178,23 @@ def berger_tables(players: List[PlayerName], verbose:bool = False) -> RoundRobnR
 
         wheel = wheel[n_half-1:] + wheel[:n_half-1]
         # if round_nr > 4: break
+
+    if ideal:
+        rounds, _, _ = \
+                equalize_schedules_in_rounds(rounds, 
+                                             eq_type="DIAG_R2L2R", 
+                                             verbose=verbose)
+        # ALT: 
+        #   best_result = BestResult(players=players)
+        #   _find_best_iteration(
+        #       round_robin_rounds= round_robin_rounds,
+        #       eq_type = "DIAG_R2L2R",
+        #       offset_x = 0,
+        #       best_result = best_result,
+        #       players = players,
+        #       verbose = verbose,
+        #       )
+        #   rounds = best_result.best_rounds
 
     return rounds
 
@@ -501,8 +528,6 @@ def _find_best_iteration(
 
     return selected
 
-def has_ideal(nr_of_players:int) -> bool:
-    return (nr_of_players - 4) % 6 != 0
 
 def find_best_equalize_solution(
         round_robin_rounds: RoundRobnRounds, 
@@ -517,6 +542,7 @@ def find_best_equalize_solution(
     best_result = BestResult(players=players)
     if best_result.has_ideal:
         _find_best_iteration(
+            # ideal solutinn is: berger + DIAG_R2L2R for 2/3 cases
             round_robin_rounds= round_robin_rounds,
             eq_type = "DIAG_R2L2R",
             offset_x = 0,
