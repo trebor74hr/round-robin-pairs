@@ -17,9 +17,10 @@ Functions have:
 
 Unit testing based on examples in [https://handbook.fide.com/chapter/C05Annex1](https://handbook.fide.com/chapter/C05Annex1).
 
-Example:
 
-Berger tables:
+## Usage / basic examples:
+
+For Berger tables:
 
     from round_robin_pairs import berger_tables, circle_tables, round_robin_rounds_to_str_list 
 
@@ -40,7 +41,8 @@ Berger tables:
         Round 4: 6-5 1-4 2-3
         Round 5: 3-6 4-2 5-1
     
-Circle algorithm:
+
+Circle algorithm example:
 
     rounds = circle_tables(players)
     print(rounds)
