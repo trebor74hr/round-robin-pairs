@@ -5,7 +5,8 @@ Unit testing based on examples in:
 run like:
 
     python test_all
-    python -m unittest test_all.TestRoundRobin.test_4_circle
+    python -m unittest test_all.TestAll.test_4_circle
+    python -m unittest tests.test_all.TestAll.test_4_circle
 """
 import unittest
 from itertools import combinations
@@ -59,8 +60,10 @@ class TestAll(unittest.TestCase):
 
     """
 
-    def create_rounds_str_list(self, nr_of_players:int, berger:bool, verbose:bool = False, return_all:bool = False):
-        players = list([f"{pl:>{FMT_WIDTH}d}" for pl in range(1,nr_of_players+1)])
+    def create_rounds_str_list(self, nr_of_players:int, berger:bool, 
+                               verbose:bool = False, return_all:bool = False, 
+                               fmt_width:int=FMT_WIDTH):
+        players = list([f"{pl:>0{fmt_width}d}" for pl in range(1,nr_of_players+1)])
         # print(players)
         function = berger_tables if berger else circle_tables
         round_robin_rounds = function(players, verbose=verbose)
@@ -416,10 +419,16 @@ class TestAll(unittest.TestCase):
 
 
     def test_14_berger_has_ideal(self):
+        """
+        python -m unittest tests.test_all.TestAll.test_14_berger_has_ideal
+        """
         self.maxDiff = None
 
         rounds_str_list, round_robin_rounds, players = \
-            self.create_rounds_str_list(14, berger=True, verbose=False, return_all=True)
+            self.create_rounds_str_list(
+                    14, berger=True, 
+                    fmt_width=2,
+                    verbose=False, return_all=True)
 
         brute_force_factor = 500
         best_result = \
@@ -433,6 +442,26 @@ class TestAll(unittest.TestCase):
         self.assertEqual(best_result.best_score, 14, best_result.best_score)
         self.assertEqual(best_result.is_ideal(), True)
         self.assertEqual(best_result.best_eq_type, "DIAG_R2L2R", best_result.best_eq_type)
+
+        rounds_str_list = round_robin_rounds_to_str_list(best_result.best_rounds, fmt_width=2)
+        self.assertEqual(rounds_str_list, [
+            'Round         1      2      3      4      5      6      7',
+            '---------------------------------------------------------',
+            'Round  1: 07-08  02-13  03-12  04-11  05-10  06-09  01-14',
+            'Round  2: 13-03  09-07  10-06  11-05  12-04  14-08  01-02',
+            'Round  3: 06-11  03-01  04-13  05-12  02-14  07-10  08-09',
+            'Round  4: 12-06  10-08  11-07  14-09  13-05  01-04  02-03',
+            'Round  5: 05-01  04-02  03-14  06-13  07-12  08-11  09-10',
+            'Round  6: 11-09  14-10  12-08  13-07  01-06  02-05  03-04',
+            'Round  7: 04-14  05-03  06-02  07-01  08-13  09-12  10-11',
+            'Round  8: 12-10  14-11  13-09  01-08  02-07  03-06  04-05',
+            'Round  9: 07-03  06-04  05-14  08-02  09-01  10-13  11-12',
+            'Round 10: 02-09  13-11  01-10  14-12  03-08  04-07  05-06',
+            'Round 11: 10-02  07-05  08-04  09-03  06-14  11-01  12-13',
+            'Round 12: 05-08  01-12  02-11  03-10  04-09  14-13  06-07',
+            'Round 13: 13-01  08-06  09-05  10-04  11-03  12-02  07-14',
+            '---------------------------------------------------------',
+            ])
 
 
     def test_16_berger(self):
