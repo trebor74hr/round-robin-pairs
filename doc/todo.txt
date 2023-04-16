@@ -5,27 +5,21 @@ Contents
 
 TODO:
 =====
-    - !! zapiši u readme što može i što ne
-        - svi neparni su riješeni s berger - u prvoj koloni je BYE 
-        - parni 6,8,12,14,18,20 ... su riješeni s okrenutim-V
-        - jedino ostaju 10,16,22,28 ... nisu riješeni
-
-    - popiši u readme sve tablice 
-        - berger, 
-        - circle 
-        - linkovi, 
-        - berger optimirani (+ okrenutim-V) - eventualno rezultati first/sch-by-players
+    - složi na statičnim stranicama:
+        - input polja za player-e i schedule- i onda generiraj ovo što radiš "ten liga ... " (tenis-liga.py)
+          tako da ispod izgenerira tablice po svakom polju
+          - kako unese tako ds dolje dinamički mijenja
+          - samo javascript i na button - osvježi ..
 
     - ubrzaj equalize - inicijalno pretraživanje player-a i schedules - preskoči ako ih već imaš
 
     - rename brute_force -> random_search
 
-    - na primjeru 10 napravi novo - brute_force - ide redom i isprobava sve kombinacije - želim vidjeti je li uopće postoji idealno rješenje
+    - **na primjeru 10 napravi novo** - brute_force - ide redom i isprobava sve kombinacije - želim vidjeti je li uopće postoji idealno rješenje
       ako postoji - probaj složiti za 16, 22, 28, ++ i ostale
 
-    - simmulated annealing ...
-
-    - solver / liear programming / mixed integer programming / constrained mixed integer programming ??
+    - simmulated annealing način ako ne bude išlo ovako ... traži cijeli prostor ili od bergera + V počni
+        - solver / liear programming / mixed integer programming / constrained mixed integer programming ??
 
 ANALYSIS:
 =========
@@ -133,3 +127,18 @@ RL 230405
         vidi i ovo:
             https://realpython.com/python-maze-solver/
 
+
+DONE
+====
+done::
+
+    - ++ zapiši u readme što može i što ne
+        - ++ svi neparni su riješeni s berger - u prvoj koloni je BYE 
+        - ++ parni 6,8,12,14,18,20 ... su riješeni s okrenutim-V
+        - ++ jedino ostaju 10,16,22,28 ... nisu riješeni
+
+    - ++ popiši u readme sve tablice 
+        - berger, 
+        - circle 
+        - linkovi, 
+        - berger optimirani (+ okrenutim-V) - eventualno rezultati first/sch-by-players
