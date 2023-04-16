@@ -33,6 +33,8 @@ from copy import deepcopy
 import enum
 import random
 from dataclasses import dataclass, field
+from itertools import combinations
+
 
 try:
     # optional
@@ -179,7 +181,7 @@ def berger_tables(players: List[PlayerName], ideal:bool=False, verbose:bool = Fa
         wheel = wheel[n_half-1:] + wheel[:n_half-1]
         # if round_nr > 4: break
 
-    if ideal:
+    if ideal and nr_players % 2 == 0:
         rounds, _, _ = \
                 equalize_schedules_in_rounds(rounds, 
                                              eq_type="DIAG_R2L2R", 
@@ -584,6 +586,40 @@ def find_best_equalize_solution(
         print("=" * 80)
 
     return best_result
+
+
+def create_demo_rounds_str_list(nr_of_players:int, berger:bool, 
+                           ideal:bool=False,
+                           verbose:bool = False, return_all:bool = False, 
+                           fmt_width:int=FMT_WIDTH):
+    # TODO: resolve better:
+    #   berger = True  -> BERGER
+    #   berger = False -> CIRCLE
+    players = list([f"{pl:>{fmt_width}d}" for pl in range(1,nr_of_players+1)])
+    # print(players)
+    function = berger_tables if berger else circle_tables
+    kwargs = {}
+    if ideal:
+        kwargs["ideal"] = ideal
+
+    round_robin_rounds = function(players, verbose=verbose, **kwargs)
+
+    expected = set([tuple(sorted(pair)) for pair in combinations(players, 2)])
+    got = [tuple(sorted(pair)) for row in round_robin_rounds for pair in row]
+    #print(expected); print(got)
+
+    if not len(expected)== len(got):
+        raise ValueError("found some duplicates or missing")
+    if not expected== set(got):
+        raise ValueError("some pair combinations not found")
+
+    rounds_str_list = round_robin_rounds_to_str_list(round_robin_rounds, fmt_width=fmt_width)
+    if verbose:
+        print("\n".join(rounds_str_list))
+
+    if return_all:
+        return rounds_str_list, round_robin_rounds, players
+    return rounds_str_list
 
 
 

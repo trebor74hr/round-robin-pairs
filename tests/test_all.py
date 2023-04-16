@@ -9,7 +9,6 @@ run like:
     python -m unittest tests.test_all.TestAll.test_4_circle
 """
 import unittest
-from itertools import combinations
 from pprint import pprint
 import os, sys
 
@@ -21,7 +20,7 @@ from round_robin_pairs import (
         equalize_schedules_in_rounds, EqualizeType, pprint_player_pairs_row,
         find_best_equalize_solution, has_ideal,
         )
-from round_robin_pairs.base import FMT_WIDTH
+from round_robin_pairs.base import FMT_WIDTH, create_demo_rounds_str_list
 
 class TestAll(unittest.TestCase):
     """
@@ -60,33 +59,6 @@ class TestAll(unittest.TestCase):
 
     """
 
-    def create_rounds_str_list(self, nr_of_players:int, berger:bool, 
-                               ideal:bool=False,
-                               verbose:bool = False, return_all:bool = False, 
-                               fmt_width:int=FMT_WIDTH):
-        players = list([f"{pl:>0{fmt_width}d}" for pl in range(1,nr_of_players+1)])
-        # print(players)
-        function = berger_tables if berger else circle_tables
-        kwargs = {}
-        if ideal:
-            kwargs["ideal"] = ideal
-
-        round_robin_rounds = function(players, verbose=verbose, **kwargs)
-
-        expected = set([tuple(sorted(pair)) for pair in combinations(players, 2)])
-        got = [tuple(sorted(pair)) for row in round_robin_rounds for pair in row]
-        #print(expected); print(got)
-        self.assertEqual(len(expected), len(got), "found some duplicates or missing")
-        self.assertEqual(expected, set(got), "some pair combinations not found" )
-
-        rounds_str_list = round_robin_rounds_to_str_list(round_robin_rounds)
-        if verbose:
-            print("\n".join(rounds_str_list))
-
-        if return_all:
-            return rounds_str_list, round_robin_rounds, players
-        return rounds_str_list
-
     def test_4_circle(self):
         # for README.md
         # players = ["1", "2", "3", "4"]
@@ -96,14 +68,14 @@ class TestAll(unittest.TestCase):
         # rounds = circle_tables(players)
         # print(rounds)
         # print("\n".join(round_robin_rounds_to_str_list(rounds)))
-        self.assertEqual(self.create_rounds_str_list(4, berger=False, verbose=False), [
+        self.assertEqual(create_demo_rounds_str_list(4, berger=False, verbose=False), [
               "Round 1: 1-4 2-3" 
             , "Round 2: 1-3 4-2" 
             , "Round 3: 1-2 3-4" 
             ])
 
     def test_5_circle(self):
-        rounds = self.create_rounds_str_list(5, berger=False, verbose=False)
+        rounds = create_demo_rounds_str_list(5, berger=False, verbose=False)
         self.assertEqual(rounds, [
             'Round 1: 1-BYE 2-5 3-4',
             'Round 2: 1-5 BYE-4 2-3',
@@ -115,7 +87,7 @@ class TestAll(unittest.TestCase):
 
 
     def test_6_circle(self):
-        self.assertEqual(self.create_rounds_str_list(6, berger=False, verbose=False), [
+        self.assertEqual(create_demo_rounds_str_list(6, berger=False, verbose=False), [
             'Round 1: 1-6 2-5 3-4',
             'Round 2: 1-5 6-4 2-3',
             'Round 3: 1-4 5-3 6-2',
@@ -124,7 +96,7 @@ class TestAll(unittest.TestCase):
             ])
 
     def test_8_circle(self):
-        self.assertEqual(self.create_rounds_str_list(8, berger=False, verbose=False), [
+        self.assertEqual(create_demo_rounds_str_list(8, berger=False, verbose=False), [
             'Round 1: 1-8 2-7 3-6 4-5',
             'Round 2: 1-7 8-6 2-5 3-4',
             'Round 3: 1-6 7-5 8-4 2-3',
@@ -135,7 +107,7 @@ class TestAll(unittest.TestCase):
             ])
 
     def test_14_circle(self):
-        self.assertEqual(self.create_rounds_str_list(14, berger=False, verbose=False), [
+        self.assertEqual(create_demo_rounds_str_list(14, berger=False, verbose=False), [
             'Round 1: 1-14 2-13 3-12 4-11 5-10 6-9 7-8',
             'Round 2: 1-13 14-12 2-11 3-10 4-9 5-8 6-7',
             'Round 3: 1-12 13-11 14-10 2-9 3-8 4-7 5-6',
@@ -152,7 +124,7 @@ class TestAll(unittest.TestCase):
             ])
 
     def test_3_berger(self):
-        self.assertEqual(self.create_rounds_str_list(3, berger=True, verbose=False), [
+        self.assertEqual(create_demo_rounds_str_list(3, berger=True, verbose=False), [
               "Round 1: 1-BYE 2-3" 
             , "Round 2: BYE-3 1-2" 
             , "Round 3: 2-BYE 3-1" 
@@ -160,7 +132,7 @@ class TestAll(unittest.TestCase):
 
     def test_4_berger(self):
         rounds_str_list, round_robin_rounds, players = \
-            self.create_rounds_str_list(4, berger=True, verbose=False, return_all=True)
+            create_demo_rounds_str_list(4, berger=True, verbose=False, return_all=True)
         self.assertEqual(rounds_str_list, [
               "Round 1: 1-4 2-3" 
             , "Round 2: 4-3 1-2" 
@@ -175,7 +147,7 @@ class TestAll(unittest.TestCase):
         self.maxDiff = None
 
         rounds_str_list, round_robin_rounds, players = \
-            self.create_rounds_str_list(4, berger=True, verbose=False, return_all=True)
+            create_demo_rounds_str_list(4, berger=True, verbose=False, return_all=True)
 
         brute_force_factor = 1000
         best_result = \
@@ -194,7 +166,7 @@ class TestAll(unittest.TestCase):
 
     def test_5_berger(self):
         rounds_str_list, round_robin_rounds, players = \
-                self.create_rounds_str_list(5, berger=True, verbose=False, return_all=True)
+                create_demo_rounds_str_list(5, berger=True, verbose=False, return_all=True)
         self.assertEqual(rounds_str_list, [
               "Round 1: 1-BYE 2-5 3-4"
             , "Round 2: BYE-4 5-3 1-2"
@@ -209,7 +181,7 @@ class TestAll(unittest.TestCase):
 
     def test_6_berger(self):
         rounds_str_list, round_robin_rounds, players = \
-            self.create_rounds_str_list(6, berger=True, verbose=False, return_all=True)
+            create_demo_rounds_str_list(6, berger=True, verbose=False, return_all=True)
         self.assertEqual(rounds_str_list, [
               "Round 1: 1-6 2-5 3-4"
             , "Round 2: 6-4 5-3 1-2"
@@ -224,7 +196,7 @@ class TestAll(unittest.TestCase):
 
     def test_6_berger_ideal(self):
         rounds_str_list, round_robin_rounds, players = \
-            self.create_rounds_str_list(6, berger=True, ideal=True, verbose=False, return_all=True)
+            create_demo_rounds_str_list(6, berger=True, ideal=True, verbose=False, return_all=True)
         self.assertEqual(rounds_str_list, [
             'Round 1: 3-4 2-5 1-6',
             'Round 2: 5-3 6-4 1-2',
@@ -237,7 +209,7 @@ class TestAll(unittest.TestCase):
         self.maxDiff = None
 
         rounds_str_list, round_robin_rounds, players = \
-            self.create_rounds_str_list(6, berger=True, verbose=False, return_all=True)
+            create_demo_rounds_str_list(6, berger=True, verbose=False, return_all=True)
 
         brute_force_factor = 500
         best_result = \
@@ -264,7 +236,7 @@ class TestAll(unittest.TestCase):
 
 
     def test_7_berger(self):
-        self.assertEqual(self.create_rounds_str_list(7, berger=True, verbose=False), [
+        self.assertEqual(create_demo_rounds_str_list(7, berger=True, verbose=False), [
               "Round 1: 1-BYE 2-7 3-6 4-5"
             , "Round 2: BYE-5 6-4 7-3 1-2"
             , "Round 3: 2-BYE 3-1 4-7 5-6"
@@ -276,7 +248,7 @@ class TestAll(unittest.TestCase):
 
     def test_8_berger(self):
         rounds_str_list, round_robin_rounds, players = \
-            self.create_rounds_str_list(8, berger=True, verbose=False, return_all=True)
+            create_demo_rounds_str_list(8, berger=True, verbose=False, return_all=True)
         self.assertEqual(rounds_str_list, [
               "Round 1: 1-8 2-7 3-6 4-5"
             , "Round 2: 8-5 6-4 7-3 1-2"
@@ -292,7 +264,7 @@ class TestAll(unittest.TestCase):
 
     def test_8_berger_ideal(self):
         rounds_str_list, round_robin_rounds, players = \
-            self.create_rounds_str_list(8, berger=True, ideal=True, verbose=False, return_all=True)
+            create_demo_rounds_str_list(8, berger=True, ideal=True, verbose=False, return_all=True)
         self.assertEqual(rounds_str_list, [
             'Round 1: 4-5 2-7 3-6 1-8',
             'Round 2: 7-3 6-4 8-5 1-2',
@@ -307,7 +279,7 @@ class TestAll(unittest.TestCase):
         self.maxDiff = None
 
         rounds_str_list, round_robin_rounds, players = \
-            self.create_rounds_str_list(8, berger=True, verbose=False, return_all=True)
+            create_demo_rounds_str_list(8, berger=True, verbose=False, return_all=True)
 
         brute_force_factor = 500
         best_result = \
@@ -335,7 +307,7 @@ class TestAll(unittest.TestCase):
 
     def test_10_berger(self):
         rounds_str_list, round_robin_rounds, players = \
-            self.create_rounds_str_list(10, berger=True, verbose=False, return_all=True)
+            create_demo_rounds_str_list(10, berger=True, verbose=False, return_all=True)
         self.assertEqual(rounds_str_list, [
               "Round 1: 1-10 2-9 3-8 4-7 5-6"
             , "Round 2: 10-6 7-5 8-4 9-3 1-2"
@@ -355,14 +327,14 @@ class TestAll(unittest.TestCase):
     def test_10_berger_has_not_ideal(self):
         with self.assertRaisesRegex(ValueError,
                 f"Ideal result not available for 10 number of players. Ideal available for: .. 8, 9, 11, 12 .."):
-            self.create_rounds_str_list(10, berger=True, ideal=True, verbose=False, return_all=True)
+            create_demo_rounds_str_list(10, berger=True, ideal=True, verbose=False, return_all=True)
 
 
     def test_10_berger_find(self):
         self.maxDiff = None
 
         rounds_str_list, round_robin_rounds, players = \
-            self.create_rounds_str_list(10, berger=True, verbose=False, return_all=True)
+            create_demo_rounds_str_list(10, berger=True, verbose=False, return_all=True)
 
         brute_force_factor = 500
         best_result = \
@@ -378,7 +350,7 @@ class TestAll(unittest.TestCase):
 
     def test_12_berger(self):
         rounds_str_list, round_robin_rounds, players = \
-            self.create_rounds_str_list(12, berger=True, verbose=False, return_all=True)
+            create_demo_rounds_str_list(12, berger=True, verbose=False, return_all=True)
         self.assertEqual(rounds_str_list, [
               "Round 1: 1-12 2-11 3-10 4-9 5-8 6-7"
             , "Round 2: 12-7 8-6 9-5 10-4 11-3 1-2"
@@ -398,7 +370,7 @@ class TestAll(unittest.TestCase):
 
     def test_12_berger_ideal(self):
         rounds_str_list, round_robin_rounds, players = \
-            self.create_rounds_str_list(12, berger=True, ideal=True, verbose=False, return_all=True)
+            create_demo_rounds_str_list(12, berger=True, ideal=True, verbose=False, return_all=True)
         self.assertEqual(rounds_str_list, [
             'Round 1: 6-7 2-11 3-10 4-9 5-8 1-12',
             'Round 2: 11-3 8-6 9-5 10-4 12-7 1-2',
@@ -417,7 +389,7 @@ class TestAll(unittest.TestCase):
         self.maxDiff = None
 
         rounds_str_list, round_robin_rounds, players = \
-            self.create_rounds_str_list(12, berger=True, verbose=False, return_all=True)
+            create_demo_rounds_str_list(12, berger=True, verbose=False, return_all=True)
 
         brute_force_factor = 500
         best_result = \
@@ -441,7 +413,7 @@ class TestAll(unittest.TestCase):
 
 
         rounds_str_list, round_robin_rounds, players = \
-            self.create_rounds_str_list(14, berger=True, verbose=False, return_all=True)
+            create_demo_rounds_str_list(14, berger=True, verbose=False, return_all=True)
         self.assertEqual(rounds_str_list, [
               "Round 1: 1-14 2-13 3-12 4-11 5-10 6-9 7-8"
             , "Round 2: 14-8 9-7 10-6 11-5 12-4 13-3 1-2"
@@ -493,7 +465,7 @@ class TestAll(unittest.TestCase):
 
     def test_14_berger_ideal(self):
         rounds_str_list, round_robin_rounds, players = \
-            self.create_rounds_str_list(14, berger=True, ideal=True, verbose=False, return_all=True)
+            create_demo_rounds_str_list(14, berger=True, ideal=True, verbose=False, return_all=True)
         self.assertEqual(rounds_str_list, [
             'Round 1: 7-8 2-13 3-12 4-11 5-10 6-9 1-14',
             'Round 2: 13-3 9-7 10-6 11-5 12-4 14-8 1-2',
@@ -518,7 +490,7 @@ class TestAll(unittest.TestCase):
         self.maxDiff = None
 
         rounds_str_list, round_robin_rounds, players = \
-            self.create_rounds_str_list(
+            create_demo_rounds_str_list(
                     14, berger=True, 
                     fmt_width=2,
                     verbose=False, return_all=True)
@@ -540,19 +512,19 @@ class TestAll(unittest.TestCase):
         self.assertEqual(rounds_str_list, [
             'Round         1      2      3      4      5      6      7',
             '---------------------------------------------------------',
-            'Round  1: 07-08  02-13  03-12  04-11  05-10  06-09  01-14',
-            'Round  2: 13-03  09-07  10-06  11-05  12-04  14-08  01-02',
-            'Round  3: 06-11  03-01  04-13  05-12  02-14  07-10  08-09',
-            'Round  4: 12-06  10-08  11-07  14-09  13-05  01-04  02-03',
-            'Round  5: 05-01  04-02  03-14  06-13  07-12  08-11  09-10',
-            'Round  6: 11-09  14-10  12-08  13-07  01-06  02-05  03-04',
-            'Round  7: 04-14  05-03  06-02  07-01  08-13  09-12  10-11',
-            'Round  8: 12-10  14-11  13-09  01-08  02-07  03-06  04-05',
-            'Round  9: 07-03  06-04  05-14  08-02  09-01  10-13  11-12',
-            'Round 10: 02-09  13-11  01-10  14-12  03-08  04-07  05-06',
-            'Round 11: 10-02  07-05  08-04  09-03  06-14  11-01  12-13',
-            'Round 12: 05-08  01-12  02-11  03-10  04-09  14-13  06-07',
-            'Round 13: 13-01  08-06  09-05  10-04  11-03  12-02  07-14',
+            'Round  1:  7- 8   2-13   3-12   4-11   5-10   6- 9   1-14',
+            'Round  2: 13- 3   9- 7  10- 6  11- 5  12- 4  14- 8   1- 2',
+            'Round  3:  6-11   3- 1   4-13   5-12   2-14   7-10   8- 9',
+            'Round  4: 12- 6  10- 8  11- 7  14- 9  13- 5   1- 4   2- 3',
+            'Round  5:  5- 1   4- 2   3-14   6-13   7-12   8-11   9-10',
+            'Round  6: 11- 9  14-10  12- 8  13- 7   1- 6   2- 5   3- 4',
+            'Round  7:  4-14   5- 3   6- 2   7- 1   8-13   9-12  10-11',
+            'Round  8: 12-10  14-11  13- 9   1- 8   2- 7   3- 6   4- 5',
+            'Round  9:  7- 3   6- 4   5-14   8- 2   9- 1  10-13  11-12',
+            'Round 10:  2- 9  13-11   1-10  14-12   3- 8   4- 7   5- 6',
+            'Round 11: 10- 2   7- 5   8- 4   9- 3   6-14  11- 1  12-13',
+            'Round 12:  5- 8   1-12   2-11   3-10   4- 9  14-13   6- 7',
+            'Round 13: 13- 1   8- 6   9- 5  10- 4  11- 3  12- 2   7-14',
             '---------------------------------------------------------',
             ])
 
@@ -562,7 +534,7 @@ class TestAll(unittest.TestCase):
         nr_of_players = 16
         nr_schedules = nr_of_players // 2 + nr_of_players % 2
         rounds_str_list, round_robin_rounds, players = \
-            self.create_rounds_str_list(nr_of_players, berger=True, verbose=False, return_all=True)
+            create_demo_rounds_str_list(nr_of_players, berger=True, verbose=False, return_all=True)
         self.assertEqual(rounds_str_list, [
               "Round 1: 1-16 2-15 3-14 4-13 5-12 6-11 7-10 8-9"
             , "Round 2: 16-9 10-8 11-7 12-6 13-5 14-4 15-3 1-2"
@@ -598,7 +570,7 @@ class TestAll(unittest.TestCase):
     def test_16_berger_has_not_ideal(self):
         with self.assertRaisesRegex(ValueError,
                 f"Ideal result not available for 16 number of players. Ideal available for: .. 14, 15, 17, 18 .."):
-            self.create_rounds_str_list(16, berger=True, ideal=True, verbose=False, return_all=True)
+            create_demo_rounds_str_list(16, berger=True, ideal=True, verbose=False, return_all=True)
 
 
     def test_16_berger_find(self):
@@ -606,7 +578,7 @@ class TestAll(unittest.TestCase):
         nr_of_players = 16
         nr_schedules = nr_of_players // 2 + nr_of_players % 2
         rounds_str_list, round_robin_rounds, players = \
-            self.create_rounds_str_list(nr_of_players, berger=True, verbose=False, return_all=True)
+            create_demo_rounds_str_list(nr_of_players, berger=True, verbose=False, return_all=True)
 
         brute_force_factor = 500
         # brute_force_factor = None # disabled
@@ -632,7 +604,7 @@ class TestAll(unittest.TestCase):
     def test_18_berger_ideal(self):
         self.maxDiff = None
         rounds_str_list, round_robin_rounds, players = \
-            self.create_rounds_str_list(18, berger=True, ideal=True, verbose=False, return_all=True)
+            create_demo_rounds_str_list(18, berger=True, ideal=True, verbose=False, return_all=True)
         self.assertEqual(rounds_str_list, [
             'Round 1: 9-10 2-17 3-16 4-15 5-14 6-13 7-12 8-11 1-18',
             'Round 2: 17-3 11-9 12-8 13-7 14-6 15-5 16-4 18-10 1-2',
@@ -657,7 +629,7 @@ class TestAll(unittest.TestCase):
         self.maxDiff = None
         nr_of_players = 18
         rounds_str_list, round_robin_rounds, players = \
-            self.create_rounds_str_list(nr_of_players, berger=True, verbose=False, return_all=True)
+            create_demo_rounds_str_list(nr_of_players, berger=True, verbose=False, return_all=True)
 
         # brute_force_factor = 1000
         brute_force_factor = None # disabled
@@ -677,7 +649,7 @@ class TestAll(unittest.TestCase):
     def test_20_berger_ideal(self):
         self.maxDiff = None
         rounds_str_list, round_robin_rounds, players = \
-            self.create_rounds_str_list(20, berger=True, ideal=True, verbose=False, return_all=True)
+            create_demo_rounds_str_list(20, berger=True, ideal=True, verbose=False, return_all=True)
         self.assertEqual(rounds_str_list, [
             'Round 1: 10-11 2-19 3-18 4-17 5-16 6-15 7-14 8-13 9-12 1-20',
             'Round 2: 19-3 12-10 13-9 14-8 15-7 16-6 17-5 18-4 20-11 1-2',
@@ -705,7 +677,7 @@ class TestAll(unittest.TestCase):
         self.maxDiff = None
         nr_of_players = 20
         rounds_str_list, round_robin_rounds, players = \
-            self.create_rounds_str_list(nr_of_players, berger=True, verbose=False, return_all=True)
+            create_demo_rounds_str_list(nr_of_players, berger=True, verbose=False, return_all=True)
 
         # brute_force_factor = 1000
         brute_force_factor = None # disabled
@@ -725,7 +697,7 @@ class TestAll(unittest.TestCase):
     def test_22_berger_has_not_ideal(self):
         with self.assertRaisesRegex(ValueError,
                 f"Ideal result not available for 22 number of players. Ideal available for: .. 20, 21, 23, 24 .."):
-            self.create_rounds_str_list(22, berger=True, ideal=True, verbose=False, return_all=True)
+            create_demo_rounds_str_list(22, berger=True, ideal=True, verbose=False, return_all=True)
 
     def test_22_plus_berger_find(self):
         self.maxDiff = None
@@ -748,7 +720,7 @@ class TestAll(unittest.TestCase):
             ):
 
             rounds_str_list, round_robin_rounds, players = \
-                self.create_rounds_str_list(nr_of_players, berger=True, verbose=False, return_all=True)
+                create_demo_rounds_str_list(nr_of_players, berger=True, verbose=False, return_all=True)
 
             brute_force_factor = None # disabled
             # brute_force_factor = 300
