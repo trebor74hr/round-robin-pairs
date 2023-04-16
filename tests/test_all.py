@@ -236,6 +236,18 @@ class TestAll(unittest.TestCase):
         self.assertEqual(best_result.is_ideal(), True)
         self.assertEqual(best_result.best_eq_type, "DIAG_R2L2R", best_result.best_eq_type)
 
+        rounds_str_list = round_robin_rounds_to_str_list(best_result.best_rounds, fmt_width=2)
+        self.assertEqual(rounds_str_list, [
+            'Round         1      2      3',
+            '-----------------------------',
+            'Round  1:  3- 4   2- 5   1- 6',
+            'Round  2:  5- 3   6- 4   1- 2',
+            'Round  3:  2- 6   3- 1   4- 5',
+            'Round  4:  1- 4   6- 5   2- 3',
+            'Round  5:  5- 1   4- 2   3- 6',
+            '-----------------------------',
+            ])
+
 
     def test_7_berger(self):
         self.assertEqual(self.create_rounds_str_list(7, berger=True, verbose=False), [
