@@ -205,7 +205,7 @@ def circle_tables(players: List[PlayerName], verbose:bool = False) -> RoundRobnR
     n = len(players)
     assert n > 0 
     if n % 2 == 1:
-        players.append("BYE")
+        players.insert(0, "BYE")
         n = len(players)
     
     half_n = n // 2
