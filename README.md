@@ -27,25 +27,35 @@ Berger tables:
 
     rounds = berger_tables(players)
     print(rounds)
-        [[['1', '4'], ['2', '3']],
-         [('4', '3'), ['1', '2']],
-         [['2', '4'], ['3', '1']]]
+        [[['1', '6'], ['2', '5'], ['3', '4']],
+         [('6', '4'), ['5', '3'], ['1', '2']],
+         [['2', '6'], ['3', '1'], ['4', '5']],
+         [('6', '5'), ['1', '4'], ['2', '3']],
+         [['3', '6'], ['4', '2'], ['5', '1']]]
+
     print("\n".join(round_robin_rounds_to_str_list(rounds)))
-        Round 1: 1-4 2-3
-        Round 2: 4-3 1-2
-        Round 3: 2-4 3-1
+        Round 1: 1-6 2-5 3-4
+        Round 2: 6-4 5-3 1-2
+        Round 3: 2-6 3-1 4-5
+        Round 4: 6-5 1-4 2-3
+        Round 5: 3-6 4-2 5-1
     
 Circle algorithm:
 
     rounds = circle_tables(players)
     print(rounds)
-        [[('1', '4'), ('2', '3')],
-         [('1', '3'), ('4', '2')],
-         [('1', '2'), ('3', '4')]]
+        [[('1', '6'), ('2', '5'), ('3', '4')],
+         [('1', '5'), ('6', '4'), ('2', '3')],
+         [('1', '4'), ('5', '3'), ('6', '2')],
+         [('1', '3'), ('4', '2'), ('5', '6')],
+         [('1', '2'), ('3', '6'), ('4', '5')]]
+
     print("\n".join(round_robin_rounds_to_str_list(rounds)))
-        Round 1: 1-4 2-3
-        Round 2: 1-3 4-2
-        Round 3: 1-2 3-4
+        Round 1: 1-6 2-5 3-4
+        Round 2: 1-5 6-4 2-3
+        Round 3: 1-4 5-3 6-2
+        Round 4: 1-3 4-2 5-6
+        Round 5: 1-2 3-6 4-5
 
 
 ## Unjust schedules and 'Modified Berger' solution
@@ -54,7 +64,9 @@ Ideally all players should play in all available schedules equally.
 For odd number of players this is satisfied for Berger case (circle haven't checked).
 
 But, for even number of players algorithm is *unjust* to one player - for
-Berger last, for circle first player, who is in all rounds in first schedule.
+Berger last, for circle first player, who is in all rounds in first schedule
+(check previous examples, for Berger check player 6, for circle check player
+1).
 
 *Ideal* case does not exist, since there are N-1 rounds and N/2 schedules, so
 in best case (*ideal*) every player should play every schedule 2 times, except,
