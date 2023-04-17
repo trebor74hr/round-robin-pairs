@@ -24,7 +24,7 @@ For Berger tables:
 
     from round_robin_pairs import berger_tables, circle_tables, round_robin_rounds_to_str_list 
 
-    players = ["1", "2", "3", "4"]
+    players = ["1", "2", "3", "4", "5", "6"]
 
     rounds = berger_tables(players)
     print(rounds)
