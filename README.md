@@ -69,12 +69,13 @@ But, for even number of players algorithm is *unjust* to one player - for
 Berger last, for circle first player, who is in all rounds in first schedule.
 For Berger algorithm check player 6 (for circle it would be player 1):
 
-    schedule:  1       2       3
-    Round 1:   1-6**   2-5     3-4
-    Round 2: **6-4     5-3     1-2
-    Round 3:   2-6**   3-1     4-5
-    Round 4: **6-5     1-4     2-3
-    Round 5:   3-6**   4-2     5-1
+    Schedule: 1         2       3
+              -------   ------- --------
+    Round 1:    1-6 *   2-5     3-4
+    Round 2:  * 6-4     5-3     1-2
+    Round 3:    2-6 *   3-1     4-5
+    Round 4:  * 6-5     1-4     2-3
+    Round 5:    3-6 *   4-2     5-1
 
 In this example players by schedule distribution:
 
@@ -113,17 +114,19 @@ To get *ideal* i.e. one of best solutions (**modified Berger**), just pass
     rounds = berger_tables(players, ideal=True)
     print("\n".join(round_robin_rounds_to_str_list(rounds)))
 
-        Round 1:   3-4     2-5   1-6**
-        Round 2:   5-3   **6-4   1-2
-        Round 3:   2-6**   3-1   4-5
-        Round 4:   1-4   **6-5   2-3
-        Round 5:   5-1     4-2   3-6**
+        Schedule:  1       2       3
+                   ------- ------- --------
+        Round 1:   3-4       2-5   1-6 *
+        Round 2:   5-3     * 6-4   1-2
+        Round 3:   2-6 *     3-1   4-5
+        Round 4:   1-4     * 6-5   2-3
+        Round 5:   5-1       4-2   3-6 *
 
 
-In this (best scenario / *ideal*) case, we have equally distribution:
+In this (best scenario / *ideal*) case we have equally distribution:
 
     Sch. 1   2   3
-    Pl. ---- --- ---
+    Pl.  --- --- ---
     1 .  2   1   2
     2 .  1   2   2
     3 .  2   1   2
